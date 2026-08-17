@@ -135,31 +135,133 @@
                     <!-- VIEW 1: TRẮC DỌC KẾT CẤU (LONGITUDINAL ELEVATION) -->
                     <div x-show="svgView === 'elevation'" class="w-full">
                         <template x-if="currentModule === 'abutment'">
-                            <svg width="520" height="315" viewBox="0 0 520 315" class="w-full h-auto max-h-[315px] select-none" x-html="renderAbutmentElevationSvg()">
+                            <svg width="520" height="315" viewBox="0 0 520 315" class="w-full h-auto max-h-[315px] select-none">
+                                <!-- Đất đắp sau mố -->
+                                <polygon points="36,51 228,51 228,180 120,180 120,116 36,74 36,51" fill="#fef3c7" stroke="#f59e0b" stroke-dasharray="3,3" />
+                                <text x="75" y="95" fill="#d97706" font-size="9.5" font-weight="bold">Đất đắp (EH, LS)</text>
+
+                                <!-- Tường cánh mố vát chuẩn -->
+                                <polygon points="36,51 280,51 280,180 120,180 120,116 36,74 36,51" fill="#fecdd3" fill-opacity="0.65" stroke="#b91c1c" stroke-width="2" stroke-dasharray="4,2" />
+                                <text x="95" y="145" fill="#991b1b" font-size="10" font-weight="bold">Tường cánh mố</text>
+                                <text x="95" y="160" fill="#7f1d1d" font-size="8.5">w1=<tspan x-text="(Number(formData.B2) + Number(formData.B5)).toFixed(1)"></tspan>m | Htc=<tspan x-text="(Number(formData.H2) + Number(formData.H3) + Number(formData.H4)).toFixed(2)"></tspan>m</text>
+
+                                <!-- Bệ mố B1 x H1 (x=120..360, y=180..215) -->
+                                <rect x="120" y="180" width="240" height="35" fill="#94a3b8" stroke="#1e293b" stroke-width="2" rx="1" />
+                                <text x="240" y="202" fill="#ffffff" font-size="10" font-weight="bold" text-anchor="middle">
+                                    Bệ mố: B1=<tspan x-text="formData.B1" fill="#fde047"></tspan>m × H1=<tspan x-text="formData.H1" fill="#fde047"></tspan>m
+                                </text>
+
+                                <!-- Thân mố B3 x H6 (x=228..280, y=75..180) -->
+                                <rect x="228" y="75" width="52" height="105" fill="#cbd5e1" stroke="#1e293b" stroke-width="2" />
+                                <text x="254" y="125" fill="#0f172a" font-size="10.5" font-weight="bold" text-anchor="middle">Thân B3=<tspan x-text="formData.B3" fill="#2563eb"></tspan>m</text>
+                                <text x="254" y="140" fill="#475569" font-size="9" text-anchor="middle">H6=<tspan x-text="formData.H6"></tspan>m</text>
+
+                                <!-- TƯỜNG ĐỈNH (B7 x H7) & MẤU ĐỠ BẢN QUÁ ĐỘ -->
+                                <rect x="228" y="50" width="20" height="25" fill="#64748b" stroke="#1e293b" stroke-width="1.5" />
+                                <rect x="210" y="60" width="18" height="15" fill="#475569" stroke="#1e293b" />
+                                <text x="238" y="42" fill="#1e293b" font-size="8.5" font-weight="bold" text-anchor="middle">Đỉnh B7=<tspan x-text="formData.B7"></tspan>m, H7=<tspan x-text="formData.H7"></tspan>m</text>
+
+                                <!-- TIM GỐI KCN -->
+                                <rect x="252" y="67" width="20" height="8" fill="#ef4444" stroke="#991b1b" rx="1" />
+                                <text x="282" y="74" fill="#dc2626" font-size="8" font-weight="bold">Tim gối</text>
+
+                                <!-- ĐƯỜNG GIÓNG KÍCH THƯỚC CHI TIẾT DƯỚI BỆ: GÓT, THÂN, MŨI -->
+                                <line x1="120" y1="225" x2="228" y2="225" stroke="#1e293b" stroke-width="1.5" />
+                                <line x1="120" y1="220" x2="120" y2="230" stroke="#1e293b" stroke-width="1.5" />
+                                <line x1="228" y1="220" x2="228" y2="230" stroke="#1e293b" stroke-width="1.5" />
+                                <text x="174" y="237" fill="#0f172a" font-size="9" font-weight="bold" text-anchor="middle">
+                                    Gót = <tspan x-text="(formData.B1 - formData.B4 - formData.B3).toFixed(1)"></tspan>m
+                                </text>
+
+                                <line x1="228" y1="225" x2="280" y2="225" stroke="#2563eb" stroke-width="1.5" />
+                                <line x1="280" y1="220" x2="280" y2="230" stroke="#2563eb" stroke-width="1.5" />
+                                <text x="254" y="237" fill="#2563eb" font-size="9" font-weight="bold" text-anchor="middle">
+                                    B3=<tspan x-text="formData.B3"></tspan>m
+                                </text>
+
+                                <line x1="280" y1="225" x2="360" y2="225" stroke="#059669" stroke-width="1.5" />
+                                <line x1="360" y1="220" x2="360" y2="230" stroke="#059669" stroke-width="1.5" />
+                                <text x="320" y="237" fill="#059669" font-size="9" font-weight="bold" text-anchor="middle">
+                                    Mũi B4=<tspan x-text="formData.B4"></tspan>m
+                                </text>
+
+                                <!-- MÓNG CỌC KHOAN NHỒI -->
+                                <g>
+                                    <rect x="165" y="245" width="18" height="55" fill="#334155" stroke="#0f172a" />
+                                    <line x1="174" y1="245" x2="174" y2="300" stroke="#f8fafc" stroke-dasharray="2,2" />
+                                    <rect x="315" y="245" width="18" height="55" fill="#334155" stroke="#0f172a" />
+                                    <line x1="324" y1="245" x2="324" y2="300" stroke="#f8fafc" stroke-dasharray="2,2" />
+                                    <text x="240" y="275" fill="#1e293b" font-size="9.5" font-weight="bold" text-anchor="middle">Cọc D=<tspan x-text="formData.pile_diameter"></tspan>m (Pcp=<tspan x-text="formData.pile_capacity_allowable"></tspan>kN)</text>
+                                </g>
                             </svg>
                         </template>
 
                         <template x-if="currentModule === 'pier'">
-                            <svg width="520" height="315" viewBox="0 0 520 315" class="w-full h-auto max-h-[315px] select-none" x-html="renderPierElevationSvg()">
-                            </svg>
-                        </template>
-                    </div>
+                            <svg width="520" height="315" viewBox="0 0 520 315" class="w-full h-auto max-h-[315px] select-none">
+                                <!-- XÀ MŨ TRỤ VÁT THANH THOÁT -->
+                                <path d="M 30,25 L 490,25 L 450,55 L 320,75 L 320,95 L 200,95 L 200,75 L 70,55 Z" fill="#93c5fd" stroke="#1e3a8a" stroke-width="2" />
+                                <text x="260" y="18" fill="#1e3a8a" font-size="10" font-weight="bold" text-anchor="middle">
+                                    XÀ MŨ: Lxm=<tspan x-text="formData.Lxm" fill="#dc2626"></tspan>m | h_ngàm=<tspan x-text="(Number(formData.hxm || 2.2) + Number(formData.hmr || 0)).toFixed(2)"></tspan>m | h_đầu=<tspan x-text="formData.hxm || 1.2"></tspan>m
+                                </text>
 
-                                <!-- MÓNG CỌC PHÂN BỐ DƯỚI ĐÁY BỆ (y=258 đến y=308) -->
+                                <!-- Badge Loại xà mũ RC / PT -->
+                                <rect x="215" y="32" width="90" height="16" fill="#1e40af" rx="2" />
+                                <text x="260" y="44" fill="#ffffff" font-size="8.5" font-weight="bold" text-anchor="middle" x-text="formData.cap_type === 'PT' ? 'DỰ ỨNG LỰC (PT)' : 'BT THƯỜNG (RC)'"></text>
+
+                                <!-- 4 Gối cầu đỏ trên xà mũ -->
+                                <rect x="70" y="19" width="18" height="6" fill="#ef4444" stroke="#991b1b" />
+                                <rect x="145" y="19" width="18" height="6" fill="#ef4444" stroke="#991b1b" />
+                                <rect x="357" y="19" width="18" height="6" fill="#ef4444" stroke="#991b1b" />
+                                <rect x="432" y="19" width="18" height="6" fill="#ef4444" stroke="#991b1b" />
+
+                                <!-- THÂN TRỤ SINGLE (1 THÂN) -->
+                                <template x-if="formData.pier_column_type !== 'TWIN'">
+                                    <g>
+                                        <template x-if="Number(formData.hmr) > 0">
+                                            <g>
+                                                <polygon points="200,95 320,95 305,120 215,120" fill="#cbd5e1" stroke="#1e293b" stroke-width="1.5" />
+                                                <text x="260" y="112" fill="#1e293b" font-size="8.5" font-weight="bold" text-anchor="middle">Vát hmr=<tspan x-text="formData.hmr"></tspan>m</text>
+                                                <polygon points="215,120 305,120 295,195 225,195" fill="#cbd5e1" stroke="#1e293b" stroke-width="2" />
+                                            </g>
+                                        </template>
+                                        <template x-if="!Number(formData.hmr) || Number(formData.hmr) <= 0">
+                                            <rect x="215" y="95" width="90" height="100" fill="#cbd5e1" stroke="#1e293b" stroke-width="2" rx="2" />
+                                        </template>
+                                        <text x="260" y="155" fill="#0f172a" font-size="10.5" font-weight="bold" text-anchor="middle">Thân: bth1=<tspan x-text="formData.bth1" fill="#2563eb"></tspan>m × hth1=<tspan x-text="formData.hth1"></tspan>m</text>
+                                        <text x="260" y="172" fill="#475569" font-size="9" text-anchor="middle">Chiều cao Hth=<tspan x-text="formData.Hth"></tspan>m</text>
+                                    </g>
+                                </template>
+
+                                <!-- THÂN TRỤ TWIN (2 CỘT) -->
+                                <template x-if="formData.pier_column_type === 'TWIN'">
+                                    <g>
+                                        <rect x="155" y="95" width="55" height="100" fill="#cbd5e1" stroke="#1e293b" stroke-width="2" rx="3" />
+                                        <text x="182" y="150" fill="#0f172a" font-size="9" font-weight="bold" text-anchor="middle">Cột 1</text>
+                                        <rect x="310" y="95" width="55" height="100" fill="#cbd5e1" stroke="#1e293b" stroke-width="2" rx="3" />
+                                        <text x="337" y="150" fill="#0f172a" font-size="9" font-weight="bold" text-anchor="middle">Cột 2</text>
+                                        <line x1="182" y1="125" x2="337" y2="125" stroke="#059669" stroke-width="1.5" stroke-dasharray="3,3" />
+                                        <text x="260" y="120" fill="#059669" font-size="9.5" font-weight="bold" text-anchor="middle">Khoảng cách s = <tspan x-text="formData.spacing_twin_columns"></tspan>m</text>
+                                        <text x="260" y="172" fill="#475569" font-size="9" text-anchor="middle">Hth = <tspan x-text="formData.Hth"></tspan>m</text>
+                                    </g>
+                                </template>
+
+                                <!-- BỆ TRỤ Cbe x Bbe x Hbe (x=90..430, y=195..235) -->
+                                <rect x="90" y="195" width="340" height="38" fill="#94a3b8" stroke="#1e293b" stroke-width="2" rx="2" />
+                                <text x="260" y="219" fill="#ffffff" font-size="10.5" font-weight="bold" text-anchor="middle">
+                                    Bệ trụ: Cbe=<tspan x-text="formData.Cbe" fill="#fde047"></tspan>m × Bbe=<tspan x-text="formData.Bbe"></tspan>m × Hbe=<tspan x-text="formData.Hbe"></tspan>m
+                                </text>
+
+                                <!-- CỌC MÓNG DƯỚI BỆ -->
                                 <g>
-                                    <rect x="175" y="258" width="16" height="50" fill="#334155" stroke="#0f172a" />
-                                    <line x1="183" y1="258" x2="183" y2="308" stroke="#f8fafc" stroke-dasharray="2,2" />
-                                    
-                                    <rect x="230" y="258" width="16" height="50" fill="#334155" stroke="#0f172a" />
-                                    <line x1="238" y1="258" x2="238" y2="308" stroke="#f8fafc" stroke-dasharray="2,2" />
-                                    
-                                    <rect x="290" y="258" width="16" height="50" fill="#334155" stroke="#0f172a" />
-                                    <line x1="298" y1="258" x2="298" y2="308" stroke="#f8fafc" stroke-dasharray="2,2" />
-                                    
-                                    <rect x="345" y="258" width="16" height="50" fill="#334155" stroke="#0f172a" />
-                                    <line x1="353" y1="258" x2="353" y2="308" stroke="#f8fafc" stroke-dasharray="2,2" />
-                                    
-                                    <text x="260" y="295" fill="#ffffff" font-size="8.5" font-weight="bold" text-anchor="middle">4 Cọc D=<tspan x-text="formData.pile_diameter"></tspan>m</text>
+                                    <rect x="125" y="233" width="18" height="55" fill="#334155" stroke="#0f172a" />
+                                    <line x1="134" y1="233" x2="134" y2="288" stroke="#f8fafc" stroke-dasharray="2,2" />
+                                    <rect x="205" y="233" width="18" height="55" fill="#334155" stroke="#0f172a" />
+                                    <line x1="214" y1="233" x2="214" y2="288" stroke="#f8fafc" stroke-dasharray="2,2" />
+                                    <rect x="295" y="233" width="18" height="55" fill="#334155" stroke="#0f172a" />
+                                    <line x1="304" y1="233" x2="304" y2="288" stroke="#f8fafc" stroke-dasharray="2,2" />
+                                    <rect x="375" y="233" width="18" height="55" fill="#334155" stroke="#0f172a" />
+                                    <line x1="384" y1="233" x2="384" y2="288" stroke="#f8fafc" stroke-dasharray="2,2" />
+                                    <text x="260" y="265" fill="#1e293b" font-size="9.5" font-weight="bold" text-anchor="middle">Cọc D=<tspan x-text="formData.pile_diameter"></tspan>m (Pcp=<tspan x-text="formData.pile_capacity_allowable"></tspan>kN)</text>
                                 </g>
                             </svg>
                         </template>
@@ -2037,227 +2139,6 @@
                         }
                     }
                     return list;
-                },
-
-                renderAbutmentElevationSvg() {
-                    const B1 = Number(this.formData.B1) || 5.0;
-                    const H1 = Number(this.formData.H1) || 1.5;
-                    const B3 = Number(this.formData.B3) || 1.8;
-                    const H6 = Number(this.formData.H6) || 6.5;
-                    const B4 = Number(this.formData.B4) || 1.2;
-                    const B2 = parseFloat(Math.max(0.2, B1 - B3 - B4).toFixed(2));
-                    const B7 = Number(this.formData.B7) || 0.5;
-                    const H7 = Number(this.formData.H7) || 1.5;
-                    const B5 = Number(this.formData.B5) || 1.0;
-                    const w1 = parseFloat((B2 + B5).toFixed(2));
-                    const Htc = parseFloat(((Number(this.formData.H2)||1.5) + (Number(this.formData.H3)||2.0) + (Number(this.formData.H4)||3.0)).toFixed(2));
-
-                    const totalWidthM = Math.max(6.0, B1 + Math.max(0, w1 - B2) + 0.8);
-                    const totalHeightM = Math.max(7.0, H1 + H6 + H7 + 1.8);
-
-                    const kx = 380.0 / totalWidthM;
-                    const ky = 190.0 / totalHeightM;
-
-                    const yFootBot = 230;
-                    const yFootTop = yFootBot - H1 * ky;
-                    const yStemTop = yFootTop - H6 * ky;
-                    const yWallTop = yStemTop - H7 * ky;
-
-                    const xFootL = 80;
-                    const xFootR = xFootL + B1 * kx;
-                    const xStemBack = xFootL + B2 * kx;
-                    const xStemFront = xStemBack + B3 * kx;
-                    const xWallFront = xStemBack + B7 * kx;
-
-                    const wWing = w1 * kx;
-                    const xWingL = Math.max(20, xStemBack - wWing);
-
-                    const pileDia = Number(this.formData.pile_diameter) || 1.0;
-                    const wPilePx = Math.max(12, pileDia * kx * 0.7);
-
-                    return `
-                        <!-- Đất đắp sau mố -->
-                        <polygon points="${xWingL},${yWallTop} ${xStemBack},${yWallTop} ${xStemBack},${yFootTop} ${xWingL},${yFootTop}" fill="#fef3c7" stroke="#f59e0b" stroke-dasharray="3,3" />
-                        <text x="${(xWingL + xStemBack)/2}" y="${(yWallTop + yFootTop)/2}" fill="#d97706" font-size="9" font-weight="bold" text-anchor="middle">Đất đắp (EH, LS)</text>
-
-                        <!-- Tường cánh mố -->
-                        <polygon points="${xWingL},${yWallTop} ${xStemFront},${yWallTop} ${xStemFront},${yFootTop} ${xFootL},${yFootTop} ${xWingL},${yStemTop + 20}" fill="#fecdd3" fill-opacity="0.65" stroke="#b91c1c" stroke-width="2" stroke-dasharray="4,2" />
-                        <text x="${(xWingL + xStemBack)/2}" y="${yStemTop + 15}" fill="#991b1b" font-size="9.5" font-weight="bold" text-anchor="middle">Tường cánh: w1=${w1}m</text>
-
-                        <!-- Bệ mố -->
-                        <rect x="${xFootL}" y="${yFootTop}" width="${B1 * kx}" height="${H1 * ky}" fill="#94a3b8" stroke="#1e293b" stroke-width="2" rx="1" />
-                        <text x="${(xFootL + xFootR)/2}" y="${(yFootTop + yFootBot)/2 + 4}" fill="#ffffff" font-size="10" font-weight="bold" text-anchor="middle">
-                            Bệ mố: B1=${B1}m × H1=${H1}m
-                        </text>
-
-                        <!-- Thân mố B3 x H6 -->
-                        <rect x="${xStemBack}" y="${yStemTop}" width="${B3 * kx}" height="${H6 * ky}" fill="#cbd5e1" stroke="#1e293b" stroke-width="2" />
-                        <text x="${(xStemBack + xStemFront)/2}" y="${(yStemTop + yFootTop)/2}" fill="#0f172a" font-size="10.5" font-weight="bold" text-anchor="middle">Thân: B3=${B3}m</text>
-                        <text x="${(xStemBack + xStemFront)/2}" y="${(yStemTop + yFootTop)/2 + 14}" fill="#475569" font-size="9" text-anchor="middle">H6=${H6}m</text>
-
-                        <!-- Tường đỉnh B7 x H7 -->
-                        <rect x="${xStemBack}" y="${yWallTop}" width="${B7 * kx}" height="${H7 * ky}" fill="#64748b" stroke="#1e293b" stroke-width="1.5" />
-                        <text x="${(xStemBack + xWallFront)/2}" y="${yWallTop - 5}" fill="#1e293b" font-size="8.5" font-weight="bold" text-anchor="middle">Đỉnh: ${B7}m×${H7}m</text>
-
-                        <!-- Mấu đỡ bản quá độ -->
-                        <rect x="${xStemBack - 16}" y="${yStemTop + 5}" width="16" height="14" fill="#475569" stroke="#1e293b" />
-
-                        <!-- Gối cầu KCN -->
-                        <rect x="${xWallFront + 6}" y="${yStemTop - 8}" width="22" height="8" fill="#ef4444" stroke="#991b1b" rx="1" />
-                        <text x="${xWallFront + 35}" y="${yStemTop - 2}" fill="#dc2626" font-size="8" font-weight="bold">Gối KCN</text>
-
-                        <!-- Đường gióng kích thước Gót, Thân, Mũi -->
-                        <line x1="${xFootL}" y1="${yFootBot + 12}" x2="${xStemBack}" y2="${yFootBot + 12}" stroke="#1e293b" stroke-width="1.5" />
-                        <text x="${(xFootL + xStemBack)/2}" y="${yFootBot + 23}" fill="#0f172a" font-size="8.5" font-weight="bold" text-anchor="middle">Gót ${B2}m</text>
-
-                        <line x1="${xStemBack}" y1="${yFootBot + 12}" x2="${xStemFront}" y2="${yFootBot + 12}" stroke="#2563eb" stroke-width="1.5" />
-                        <text x="${(xStemBack + xStemFront)/2}" y="${yFootBot + 23}" fill="#2563eb" font-size="8.5" font-weight="bold" text-anchor="middle">Thân ${B3}m</text>
-
-                        <line x1="${xStemFront}" y1="${yFootBot + 12}" x2="${xFootR}" y2="${yFootBot + 12}" stroke="#059669" stroke-width="1.5" />
-                        <text x="${(xStemFront + xFootR)/2}" y="${yFootBot + 23}" fill="#059669" font-size="8.5" font-weight="bold" text-anchor="middle">Mũi ${B4}m</text>
-
-                        <!-- Cọc móng -->
-                        <g>
-                            <rect x="${xFootL + B2 * kx * 0.4}" y="${yFootBot}" width="${wPilePx}" height="55" fill="#334155" stroke="#0f172a" />
-                            <rect x="${xStemFront + B4 * kx * 0.4}" y="${yFootBot}" width="${wPilePx}" height="55" fill="#334155" stroke="#0f172a" />
-                            <text x="${(xFootL + xFootR)/2}" y="${yFootBot + 42}" fill="#1e293b" font-size="9" font-weight="bold" text-anchor="middle">Cọc D=${pileDia}m (Pcp=${this.formData.pile_capacity_allowable||4800}kN)</text>
-                        </g>
-                    `;
-                },
-
-                renderPierElevationSvg() {
-                    const cantL = Number(this.formData.L_cant_left !== undefined ? this.formData.L_cant_left : (this.formData.L_cant || 7.0));
-                    const cantR = Number(this.formData.L_cant_right !== undefined ? this.formData.L_cant_right : (this.formData.L_cant || 7.0));
-                    const mid = Number(this.formData.L_mid || 9.55);
-                    const Lxm = Number(this.formData.Lxm || (cantL + mid + cantR));
-                    const hRoot = Number(this.formData.hxm_root || this.formData.hxm || 2.2);
-                    const hTipL = Number(this.formData.hxm_tip_left || this.formData.hxm_tip || 1.2);
-                    const hTipR = Number(this.formData.hxm_tip_right || this.formData.hxm_tip || 1.2);
-                    const Hth = Number(this.formData.Hth) || 8.4;
-                    const Hbe = Number(this.formData.Hbe) || 2.0;
-                    const Cbe = Number(this.formData.Cbe) || 11.4;
-                    const Bbe = Number(this.formData.Bbe) || 6.0;
-
-                    const totalWidthM = Math.max(10.0, Math.max(Lxm, Cbe) + 1.5);
-                    const totalHeightM = Math.max(8.0, hRoot + Hth + Hbe + 2.5);
-
-                    const kx = 460.0 / totalWidthM;
-                    const ky = 180.0 / totalHeightM;
-                    const cx = 260;
-
-                    const yCapTop = 35;
-                    const yCapBotRoot = yCapTop + hRoot * ky;
-                    const yCapBotTipL = yCapTop + hTipL * ky;
-                    const yCapBotTipR = yCapTop + hTipR * ky;
-
-                    const wL = Lxm * kx;
-                    const xCapL = cx - wL / 2.0;
-                    const xCapR = cx + wL / 2.0;
-                    const xRootL = xCapL + cantL * kx;
-                    const xRootR = xCapR - cantR * kx;
-
-                    const capPts = `${xCapL},${yCapTop} ${xCapR},${yCapTop} ${xCapR},${yCapBotTipR} ${xRootR},${yCapBotRoot} ${xRootL},${yCapBotRoot} ${xCapL},${yCapBotTipL}`;
-
-                    const yFootTop = yCapBotRoot + Hth * ky;
-                    const yFootBot = yFootTop + Hbe * ky;
-                    const wFoot = Cbe * kx;
-                    const xFootL = cx - wFoot / 2.0;
-
-                    return `
-                        <!-- XÀ MŨ VÁT ĐÚNG TỶ LỆ DẦM HẪNG -->
-                        <polygon points="${capPts}" fill="#93c5fd" stroke="#1e3a8a" stroke-width="2" />
-                        <text x="${cx}" y="22" fill="#1e3a8a" font-size="10" font-weight="bold" text-anchor="middle">
-                            XÀ MŨ: Lxm=${Lxm}m (Trái ${cantL}m + Giữa ${mid}m + Phải ${cantR}m)
-                        </text>
-
-                        <!-- Badge Loại xà mũ RC / PT -->
-                        <rect x="${cx - 45}" y="${yCapTop + 5}" width="90" height="15" fill="#1e40af" rx="2" />
-                        <text x="${cx}" y="${yCapTop + 16}" fill="#ffffff" font-size="8" font-weight="bold" text-anchor="middle">
-                            ${this.formData.cap_type === 'PT' ? 'DỰ ỨNG LỰC (PT)' : 'BT THƯỜNG (RC)'}
-                        </text>
-
-                        <!-- THÂN TRỤ NỐI TỪ ĐÁY XÀ MŨ XUỐNG ĐỈNH BỆ -->
-                        ${this.renderPierStemSvgScaled(cx, yCapBotRoot, yFootTop, kx, ky)}
-
-                        <!-- BỆ TRỤ Cbe x Bbe x Hbe -->
-                        <rect x="${xFootL}" y="${yFootTop}" width="${wFoot}" height="${Hbe * ky}" fill="#94a3b8" stroke="#1e293b" stroke-width="2" rx="1" />
-                        <text x="${cx}" y="${yFootTop + (Hbe * ky)/2 + 4}" fill="#ffffff" font-size="9.5" font-weight="bold" text-anchor="middle">
-                            Bệ trụ: Cbe=${Cbe}m × Bbe=${Bbe}m × Hbe=${Hbe}m
-                        </text>
-
-                        <!-- CỌC MÓNG DƯỚI BỆ -->
-                        <g>
-                            <rect x="${xFootL + wFoot * 0.18}" y="${yFootBot}" width="16" height="40" fill="#334155" stroke="#0f172a" />
-                            <rect x="${cx - 8}" y="${yFootBot}" width="16" height="40" fill="#334155" stroke="#0f172a" />
-                            <rect x="${xFootL + wFoot * 0.82 - 16}" y="${yFootBot}" width="16" height="40" fill="#334155" stroke="#0f172a" />
-                            <text x="${cx}" y="${yFootBot + 30}" fill="#1e293b" font-size="8.5" font-weight="bold" text-anchor="middle">Cọc D=${this.formData.pile_diameter||1.2}m (Pcp=${this.formData.pile_capacity_allowable||4800}kN)</text>
-                        </g>
-                    `;
-                },
-
-                renderPierStemSvgScaled(cx, yCapBotRoot, yFootTop, kx, ky) {
-                    const isTwin = this.formData.pier_column_type === 'TWIN';
-                    const hmr = Number(this.formData.hmr) || 0;
-                    const bmr = Number(this.formData.bmr) || 7.5;
-                    const bth1 = Number(this.formData.bth1) || 5.5;
-                    const hth1 = Number(this.formData.hth1) || 1.6;
-                    const Hth = Number(this.formData.Hth) || 8.4;
-                    const s = Number(this.formData.spacing_twin_columns) || 4.0;
-                    const bth1_col = Number(this.formData.bth1_col) || 2.0;
-
-                    if (isTwin) {
-                        const wCol = Math.max(20, bth1_col * kx);
-                        const sPx = s * kx;
-                        const cx1 = cx - sPx / 2.0;
-                        const cx2 = cx + sPx / 2.0;
-                        const hColPx = yFootTop - yCapBotRoot;
-                        return `
-                            <g>
-                                <rect x="${(cx1 - wCol/2).toFixed(1)}" y="${yCapBotRoot}" width="${wCol.toFixed(1)}" height="${hColPx}" fill="#cbd5e1" stroke="#1e293b" stroke-width="2" rx="2" />
-                                <text x="${cx1.toFixed(1)}" y="${yCapBotRoot + hColPx/2}" fill="#0f172a" font-size="8.5" font-weight="bold" text-anchor="middle">Cột 1 (${bth1_col}m)</text>
-                                
-                                <rect x="${(cx2 - wCol/2).toFixed(1)}" y="${yCapBotRoot}" width="${wCol.toFixed(1)}" height="${hColPx}" fill="#cbd5e1" stroke="#1e293b" stroke-width="2" rx="2" />
-                                <text x="${cx2.toFixed(1)}" y="${yCapBotRoot + hColPx/2}" fill="#0f172a" font-size="8.5" font-weight="bold" text-anchor="middle">Cột 2 (${bth1_col}m)</text>
-                                
-                                <line x1="${cx1.toFixed(1)}" y1="${yCapBotRoot + hColPx/2 - 15}" x2="${cx2.toFixed(1)}" y2="${yCapBotRoot + hColPx/2 - 15}" stroke="#059669" stroke-width="1.5" stroke-dasharray="3,3" />
-                                <text x="${cx}" y="${yCapBotRoot + hColPx/2 - 20}" fill="#059669" font-size="8.5" font-weight="bold" text-anchor="middle">s = ${s}m (Hth=${Hth}m)</text>
-                            </g>
-                        `;
-                    } else {
-                        const wTh1 = Math.max(25, bth1 * kx);
-                        const xTh1L = (cx - wTh1 / 2.0).toFixed(1);
-                        const xTh1R = (cx + wTh1 / 2.0).toFixed(1);
-
-                        if (hmr > 0) {
-                            const wMr = Math.max(wTh1, bmr * kx);
-                            const xMrL = (cx - wMr / 2.0).toFixed(1);
-                            const xMrR = (cx + wMr / 2.0).toFixed(1);
-                            const yMrBot = yCapBotRoot + Math.min(yFootTop - yCapBotRoot - 15, hmr * ky);
-
-                            const mrPts = `${xMrL},${yCapBotRoot} ${xMrR},${yCapBotRoot} ${xTh1R},${yMrBot} ${xTh1L},${yMrBot}`;
-                            const mainPts = `${xTh1L},${yMrBot} ${xTh1R},${yMrBot} ${xTh1R},${yFootTop} ${xTh1L},${yFootTop}`;
-
-                            return `
-                                <g>
-                                    <polygon points="${mrPts}" fill="#e2e8f0" stroke="#1e293b" stroke-width="2" />
-                                    <text x="${cx}" y="${((yCapBotRoot + yMrBot)/2 + 3).toFixed(1)}" fill="#1e293b" font-size="8" font-weight="bold" text-anchor="middle">Mở rộng: bmr=${bmr}m (hmr=${hmr}m)</text>
-                                    
-                                    <polygon points="${mainPts}" fill="#cbd5e1" stroke="#1e293b" stroke-width="2" />
-                                    <text x="${cx}" y="${((yMrBot + yFootTop)/2 - 2).toFixed(1)}" fill="#0f172a" font-size="9.5" font-weight="bold" text-anchor="middle">Thân: ${bth1}m × ${hth1}m</text>
-                                    <text x="${cx}" y="${((yMrBot + yFootTop)/2 + 12).toFixed(1)}" fill="#475569" font-size="8.5" text-anchor="middle">Hth = ${Hth}m</text>
-                                </g>
-                            `;
-                        } else {
-                            const mainPts = `${xTh1L},${yCapBotRoot} ${xTh1R},${yCapBotRoot} ${xTh1R},${yFootTop} ${xTh1L},${yFootTop}`;
-                            return `
-                                <g>
-                                    <polygon points="${mainPts}" fill="#cbd5e1" stroke="#1e293b" stroke-width="2" />
-                                    <text x="${cx}" y="${((yCapBotRoot + yFootTop)/2 - 2).toFixed(1)}" fill="#0f172a" font-size="9.5" font-weight="bold" text-anchor="middle">Thân: ${bth1}m × ${hth1}m</text>
-                                    <text x="${cx}" y="${((yCapBotRoot + yFootTop)/2 + 12).toFixed(1)}" fill="#475569" font-size="8.5" text-anchor="middle">Hth = ${Hth}m</text>
-                                </g>
-                            `;
-                        }
-                    }
                 },
 
                 getTendonProfilePoints(gIdx) {
