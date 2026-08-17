@@ -90,14 +90,15 @@ class TestPierModule(unittest.TestCase):
 
 class TestReporting(unittest.TestCase):
     def test_reports_generation(self):
-        os.makedirs("output_reports", exist_ok=True)
-        res_mo = AbutmentSolver(AbutmentModel()).solve()
-        p1 = generate_abutment_docx_report(res_mo, "output_reports/test_mo.docx")
-        p2 = generate_abutment_html_report(res_mo, "output_reports/test_mo.html")
-        p3 = generate_abutment_pdf_report(res_mo, "output_reports/test_mo.pdf")
-        self.assertTrue(os.path.exists(p1))
-        self.assertTrue(os.path.exists(p2))
-        self.assertTrue(os.path.exists(p3))
+        import tempfile
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            res_mo = AbutmentSolver(AbutmentModel()).solve()
+            p1 = generate_abutment_docx_report(res_mo, os.path.join(tmp_dir, "test_mo.docx"))
+            p2 = generate_abutment_html_report(res_mo, os.path.join(tmp_dir, "test_mo.html"))
+            p3 = generate_abutment_pdf_report(res_mo, os.path.join(tmp_dir, "test_mo.pdf"))
+            self.assertTrue(os.path.exists(p1))
+            self.assertTrue(os.path.exists(p2))
+            self.assertTrue(os.path.exists(p3))
 
 
 if __name__ == "__main__":

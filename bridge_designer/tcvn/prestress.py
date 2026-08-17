@@ -23,7 +23,6 @@ class TendonGroup:
     eccentricity_mid: float = 1000.0 # Độ lệch tâm tại ngàm (mm, tính từ trục trung hòa lên thớ trên +TOP)
     eccentricity_end: float = 600.0  # Độ lệch tâm tại đầu neo (mm)
     tension_stage: int = 1     # Giai đoạn căng kéo (1: ngay sau đúc xà mũ; 3: sau khi lao dầm...)
-    jacking_stress_ratio: float = 0.75 # Tỷ lệ ứng suất kéo căng (0.75 fpu)
     alpha_v: float = 0.0       # Góc nghiêng cáp tại mặt cắt ngàm (rad)
     # Danh sách các điểm hình học đường cáp động (không giới hạn 5 điểm, có thể 10-15 điểm)
     # Mỗi điểm là dict: {"x": mm, "e": mm, "type": 1|2|3 (thẳng, parabol trước, parabol sau)}
@@ -151,7 +150,7 @@ class PrestressedCapSolver:
                 tg = TendonGroup(
                     name=g.get("name", ""),
                     num_tendons=g.get("num_tendons", 0),
-                    strands_per_tendon=g.get("strands_per_tendon", g.get("num_strands", 12)),
+                    num_strands=g.get("num_strands", 12),
                     eccentricity_end=g.get("eccentricity_end", 600.0),
                     eccentricity_mid=g.get("eccentricity_mid", 1000.0),
                     tension_stage=g.get("tension_stage", 1),

@@ -250,6 +250,4 @@ class PierModel:
 
     @property
     def total_piles(self) -> int:
-        if self.custom_piles and len(self.custom_piles) > 0:
-            return len(self.custom_piles)
-        return sum(row.get("count", 0) if isinstance(row, dict) else getattr(row, "count", 0) for row in self.pile_rows)
+        return sum(row.count for row in self.pile_rows)
