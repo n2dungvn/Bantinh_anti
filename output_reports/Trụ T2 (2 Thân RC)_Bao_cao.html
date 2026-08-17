@@ -153,7 +153,7 @@
     </table>
 
     <!-- CHƯƠNG III: TẢI TRỌNG TIÊU CHUẨN -->
-    <h2>CHƯƠNG III. CHI TIẾT CÁC TẢI TRỌNG TIÊU CHUẨN</h2>
+    <h2>CHƯƠNG III. CHI TIẾT CÁC TẢI TRỌNG TIÊU CHUẨN (TCVN 11823-3)</h2>
     <table>
         <tr><th>Ký hiệu</th><th>Tên tải trọng</th><th>Cách xác định / Công thức</th><th>Giá trị lực</th><th>Điểm đặt</th></tr>
         <tr><td>DC1_left</td><td>Tĩnh tải dầm nhịp trái</td><td>Phản lực dầm nhịp trái</td><td>6706.0 kN</td><td>Lệch tâm e=-0.90m</td></tr>
@@ -161,6 +161,13 @@
         <tr><td>DW</td><td>Tĩnh tải lớp phủ & tiện ích</td><td>DW trái + DW phải</td><td>1368.8 kN</td><td>Tại tim gối</td></tr>
         <tr><td>DC2</td><td>Tự trọng bê tông Trụ</td><td>Xà mũ + Thân + Bệ</td><td>8230.3 kN</td><td>Trọng tâm các khối</td></tr>
         <tr><td>PL</td><td>Hoạt tải người đi bộ</td><td>pPL × bpl × (L1+L2)/2</td><td>0.0 kN</td><td>Phân bố lề bộ hành</td></tr>
+        <tr><td>WS_des</td><td>Gió KCN & Trụ (V_tk=38.0m/s)</td><td>Tổ hợp Cường độ III (không có xe)</td><td>H_ngang=201.9 kN, H_dọc=40.1 kN</td><td>Đỉnh gối & thân</td></tr>
+        <tr><td>WS_25</td><td>Gió KCN & Trụ (V=25m/s)</td><td>Tổ hợp Cường độ V & Sử dụng I (có xe)</td><td>H_ngang=70.3 kN, H_dọc=14.0 kN</td><td>Đỉnh gối & thân</td></tr>
+        <tr><td>WL</td><td>Gió thổi lên hoạt tải xe (0.14 kN/m²)</td><td>Tổ hợp Cường độ V & Sử dụng I</td><td>H_ngang=54.8 kN, H_dọc=20.6 kN</td><td>Cao 1.8m trên mặt cầu</td></tr>
+        <tr><td>WA & WB</td><td>Dòng chảy nước & Đẩy nổi</td><td>p = 0.514·CD·V² (V=0.0m/s)</td><td>WA=0.0 kN, WB=0.0 kN</td><td>Đáy thân & bệ</td></tr>
+        <tr><td>TU+ / TU-</td><td>Biến dạng nhiệt độ (ΔT=±20°C)</td><td>Giải chuỗi gối 1D</td><td>TU+ = 739.0 kN, TU- = 739.0 kN</td><td>Mặt gối đỉnh trụ</td></tr>
+        <tr><td>CR & SH</td><td>Từ biến & Co ngót bê tông dầm</td><td>ε_cr=300×10⁻⁶, ε_sh=200×10⁻⁶</td><td>H_CR = 369.5 kN, H_SH = 295.6 kN</td><td>Mặt gối đỉnh trụ</td></tr>
+        <tr><td>FR</td><td>Ma sát gối chậu trượt (μ=0.05)</td><td>FR = μ · ΣN_gối_trượt</td><td>H_FR = ±739.0 kN</td><td>Mặt gối đỉnh trụ</td></tr>
         <tr><td>EQ</td><td>Động đất tác dụng lên Trụ</td><td>Gia tốc A=0.1108, S=1.2, R_stem=3.0, R_móng=1.0</td><td>Tải quán tính</td><td>Tâm khối lượng</td></tr>
         <tr><td>CT</td><td>Va xe ô tô vào thân trụ</td><td>TCVN 11823-3 Điều 3.6.5</td><td>1800.0 kN</td><td>Cao độ z=3.2m</td></tr>
         <tr><td>CV</td><td>Va tàu thủy thông thuyền</td><td>TCVN 11823-3 Điều 3.14 (Cấp III)</td><td>0.0 kN</td><td>Cao độ z=3.5m</td></tr>

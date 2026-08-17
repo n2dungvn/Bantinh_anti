@@ -54,10 +54,16 @@ Trình duyệt web sẽ tự động mở tại địa chỉ: **`http://127.0.0.
   python main.py --cli --module pier --input bridge_designer/data/default_pier_pt.json --format docx
   ```
 
-### 3. Chạy bộ kiểm thử tự động (Unit Tests)
-```bash
-python -m unittest tests/test_all.py
-```
+### 3. Chạy bộ kiểm thử tự động (Unit & Smoke Tests)
+- **Kiểm thử tính toán kết cấu cốt lõi**:
+  ```bash
+  python -m unittest tests/test_all.py
+  ```
+- **Kiểm thử giao diện Web & API (Smoke Test)**:
+  ```bash
+  python -m unittest tests/test_ui_smoke.py
+  ```
+*(Quy định an toàn cho AI Coding Agent xem chi tiết tại [AGENTS.md](AGENTS.md))*
 
 ---
 

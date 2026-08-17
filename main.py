@@ -7,6 +7,17 @@ import webbrowser
 import threading
 import time
 
+if hasattr(sys.stdout, "reconfigure"):
+    try:
+        sys.stdout.reconfigure(encoding="utf-8")
+    except Exception:
+        pass
+if hasattr(sys.stderr, "reconfigure"):
+    try:
+        sys.stderr.reconfigure(encoding="utf-8")
+    except Exception:
+        pass
+
 def open_browser():
     time.sleep(1.2)
     webbrowser.open("http://127.0.0.1:8000")

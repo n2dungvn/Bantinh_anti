@@ -19,9 +19,25 @@ from ..reporting import (
 )
 
 
+if hasattr(sys.stdout, "reconfigure"):
+    try:
+        sys.stdout.reconfigure(encoding="utf-8")
+    except Exception:
+        pass
+if hasattr(sys.stderr, "reconfigure"):
+    try:
+        sys.stderr.reconfigure(encoding="utf-8")
+    except Exception:
+        pass
+
+
 def main():
     parser = argparse.ArgumentParser(
         description="Phần mềm Tính toán Mố & Trụ Cầu theo TCVN 11823-2017"
+    )
+    parser.add_argument(
+        "--cli", "-c", action="store_true", default=False,
+        help="Chạy chế độ dòng lệnh (CLI)"
     )
     parser.add_argument(
         "--module", "-m", choices=["abutment", "pier", "mo", "tru"], default="abutment",
