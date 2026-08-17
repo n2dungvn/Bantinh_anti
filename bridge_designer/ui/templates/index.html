@@ -135,13 +135,11 @@
                     <!-- VIEW 1: TRẮC DỌC KẾT CẤU (LONGITUDINAL ELEVATION) -->
                     <div x-show="svgView === 'elevation'" class="w-full">
                         <template x-if="currentModule === 'abutment'">
-                            <svg width="520" height="315" viewBox="0 0 520 315" class="w-full h-auto max-h-[315px] select-none" x-html="renderAbutmentElevationSvg()">
-                            </svg>
+                            <div class="w-full flex justify-center" x-html="renderAbutmentElevationSvg()"></div>
                         </template>
 
                         <template x-if="currentModule === 'pier'">
-                            <svg width="520" height="315" viewBox="0 0 520 315" class="w-full h-auto max-h-[315px] select-none" x-html="renderPierElevationSvg()">
-                            </svg>
+                            <div class="w-full flex justify-center" x-html="renderPierElevationSvg()"></div>
                         </template>
                     </div>
 
@@ -1310,12 +1308,24 @@
                         <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
                             <div>
                                 <label class="block text-slate-600 mb-1">Vùng gió</label>
-                                <select x-model="formData.wind_zone" class="w-full border border-slate-300 rounded p-1.5 bg-white font-bold">
+                                <select x-model="formData.wind_zone" @change="onWindZoneChange()" class="w-full border border-slate-300 rounded p-1.5 bg-white font-bold">
                                     <option value="I">Vùng I (38 m/s)</option>
                                     <option value="II">Vùng II (45 m/s)</option>
                                     <option value="III">Vùng III (53 m/s)</option>
                                     <option value="IV">Vùng IV (59 m/s)</option>
                                 </select>
+                            </div>
+                            <div>
+                                <label class="block text-slate-600 mb-1">Vận tốc gió cơ bản VB (m/s)</label>
+                                <input type="number" step="1" x-model.number="formData.VB" class="w-full border border-slate-300 rounded p-1.5 font-bold text-blue-800">
+                            </div>
+                            <div>
+                                <label class="block text-slate-600 mb-1">Hệ số điều chỉnh gió (K1 / S)</label>
+                                <input type="number" step="0.01" x-model.number="formData.S_factor" class="w-full border border-slate-300 rounded p-1.5 font-bold text-slate-800">
+                            </div>
+                            <div>
+                                <label class="block text-slate-600 mb-1">Vận tốc thiết kế Vtk (m/s)</label>
+                                <div class="w-full border border-slate-200 bg-slate-100 rounded p-1.5 font-black text-blue-900" x-text="((formData.VB || 45) * (formData.S_factor || 1.0)).toFixed(1) + ' m/s'"></div>
                             </div>
                             <div>
                                 <label class="block text-slate-600 mb-1">Địa hình</label>
@@ -1349,10 +1359,6 @@
                             <div>
                                 <label class="block text-slate-600 mb-1">Hệ số Sđđ thực địa</label>
                                 <input type="number" step="0.1" x-model.number="formData.S_seismic" class="w-full border border-slate-300 rounded p-1.5 font-medium">
-                            </div>
-                            <div>
-                                <label class="block text-slate-600 mb-1">Vận tốc gió VB (m/s)</label>
-                                <input type="number" step="1" x-model.number="formData.VB" class="w-full border border-slate-300 rounded p-1.5 font-medium">
                             </div>
                         </div>
                     </div>
@@ -1993,6 +1999,13 @@
                     this.recalcVesselForce();
                 },
 
+                onWindZoneChange() {
+                    const zoneMap = { 'I': 38.0, 'II': 45.0, 'III': 53.0, 'IV': 59.0 };
+                    if (zoneMap[this.formData.wind_zone]) {
+                        this.formData.VB = zoneMap[this.formData.wind_zone];
+                    }
+                },
+
                 recalcVesselForce() {
                     const dwt = this.formData.ship_DWT || 1000;
                     const v = (this.formData.ship_velocity_m_s || 3.0) + (this.formData.V_water_flow || 1.5);
@@ -2030,6 +2043,10 @@
                     const H7 = Number(this.formData.H7) || 1.5;
                     const B5 = Number(this.formData.B5) || 1.0;
                     const w1 = parseFloat((B2 + B5).toFixed(2));
+                    const H2 = Number(this.formData.H2) || 1.5;
+                    const H3 = Number(this.formData.H3) || 2.0;
+                    const H4 = Number(this.formData.H4) || 3.0;
+                    const Htc = parseFloat((H2 + H3 + H4).toFixed(2));
 
                     const totalWidthM = Math.max(6.0, B1 + Math.max(0, w1 - B2) + 0.8);
                     const totalHeightM = Math.max(7.0, H1 + H6 + H7 + 1.8);
@@ -2048,59 +2065,66 @@
                     const xStemFront = xStemBack + B3 * kx;
                     const xWallFront = xStemBack + B7 * kx;
 
-                    const wWing = w1 * kx;
-                    const xWingL = Math.max(20, xStemBack - wWing);
+                    const xWingTip = xStemBack - B5 * kx;
+                    const yWingStep = yFootTop - H2 * ky;
+                    const yWingSlopeTop = yWallTop + H4 * ky;
+
+                    const wingPts = `${xWingTip.toFixed(1)},${yWallTop.toFixed(1)} ${xStemFront.toFixed(1)},${yWallTop.toFixed(1)} ${xStemFront.toFixed(1)},${yFootTop.toFixed(1)} ${xStemBack.toFixed(1)},${yFootTop.toFixed(1)} ${xStemBack.toFixed(1)},${yWingStep.toFixed(1)} ${xWingTip.toFixed(1)},${yWingSlopeTop.toFixed(1)}`;
+                    const soilPts = `${xWingTip.toFixed(1)},${yWallTop.toFixed(1)} ${xStemBack.toFixed(1)},${yWallTop.toFixed(1)} ${xStemBack.toFixed(1)},${yWingStep.toFixed(1)} ${xWingTip.toFixed(1)},${yWingSlopeTop.toFixed(1)}`;
 
                     const pileDia = Number(this.formData.pile_diameter) || 1.0;
                     const wPilePx = Math.max(12, pileDia * kx * 0.7);
 
                     return `
-                        <!-- Đất đắp sau mố -->
-                        <polygon points="${xWingL.toFixed(1)},${yWallTop.toFixed(1)} ${xStemBack.toFixed(1)},${yWallTop.toFixed(1)} ${xStemBack.toFixed(1)},${yFootTop.toFixed(1)} ${xWingL.toFixed(1)},${yFootTop.toFixed(1)}" fill="#fef3c7" stroke="#f59e0b" stroke-dasharray="3,3" />
-                        <text x="${((xWingL + xStemBack)/2).toFixed(1)}" y="${((yWallTop + yFootTop)/2).toFixed(1)}" fill="#d97706" font-size="9" font-weight="bold" text-anchor="middle">Đất đắp (EH, LS)</text>
+                        <svg width="520" height="315" viewBox="0 0 520 315" class="w-full h-auto max-h-[315px] select-none">
+                            <!-- Đất đắp sau mố theo vát tường cánh -->
+                            <polygon points="${soilPts}" fill="#fef3c7" stroke="#f59e0b" stroke-dasharray="3,3" />
+                            <text x="${((xWingTip + xStemBack)/2).toFixed(1)}" y="${((yWallTop + yWingStep)/2).toFixed(1)}" fill="#d97706" font-size="9" font-weight="bold" text-anchor="middle">Đất đắp (EH, LS)</text>
 
-                        <!-- Tường cánh mố -->
-                        <polygon points="${xWingL.toFixed(1)},${yWallTop.toFixed(1)} ${xStemFront.toFixed(1)},${yWallTop.toFixed(1)} ${xStemFront.toFixed(1)},${yFootTop.toFixed(1)} ${xFootL.toFixed(1)},${yFootTop.toFixed(1)} ${xWingL.toFixed(1)},${(yStemTop + 20).toFixed(1)}" fill="#fecdd3" fill-opacity="0.65" stroke="#b91c1c" stroke-width="2" stroke-dasharray="4,2" />
-                        <text x="${((xWingL + xStemBack)/2).toFixed(1)}" y="${(yStemTop + 15).toFixed(1)}" fill="#991b1b" font-size="9.5" font-weight="bold" text-anchor="middle">Tường cánh: w1=${w1}m</text>
+                            <!-- Tường cánh mố chuẩn xác 6 điểm đa giác theo chi tiết tường cánh -->
+                            <polygon points="${wingPts}" fill="#fecdd3" fill-opacity="0.65" stroke="#b91c1c" stroke-width="2" stroke-dasharray="4,2" />
+                            <text x="${((xWingTip + xStemBack)/2).toFixed(1)}" y="${(yStemTop + 15).toFixed(1)}" fill="#991b1b" font-size="9.5" font-weight="bold" text-anchor="middle">Tường cánh: w1=${w1}m</text>
+                            <text x="${((xWingTip + xStemBack)/2).toFixed(1)}" y="${(yStemTop + 28).toFixed(1)}" fill="#7f1d1d" font-size="8">Htc=${Htc}m (H2=${H2}, H3=${H3}, H4=${H4})</text>
 
-                        <!-- Bệ mố -->
-                        <rect x="${xFootL.toFixed(1)}" y="${yFootTop.toFixed(1)}" width="${(B1 * kx).toFixed(1)}" height="${(H1 * ky).toFixed(1)}" fill="#94a3b8" stroke="#1e293b" stroke-width="2" rx="1" />
-                        <text x="${((xFootL + xFootR)/2).toFixed(1)}" y="${((yFootTop + yFootBot)/2 + 4).toFixed(1)}" fill="#ffffff" font-size="10" font-weight="bold" text-anchor="middle">
-                            Bệ mố: B1=${B1}m × H1=${H1}m
-                        </text>
+                            <!-- Bệ mố -->
+                            <rect x="${xFootL.toFixed(1)}" y="${yFootTop.toFixed(1)}" width="${(B1 * kx).toFixed(1)}" height="${(H1 * ky).toFixed(1)}" fill="#94a3b8" stroke="#1e293b" stroke-width="2" rx="1" />
+                            <text x="${((xFootL + xFootR)/2).toFixed(1)}" y="${((yFootTop + yFootBot)/2 + 4).toFixed(1)}" fill="#ffffff" font-size="10" font-weight="bold" text-anchor="middle">
+                                Bệ mố: B1=${B1}m × H1=${H1}m
+                            </text>
 
-                        <!-- Thân mố B3 x H6 -->
-                        <rect x="${xStemBack.toFixed(1)}" y="${yStemTop.toFixed(1)}" width="${(B3 * kx).toFixed(1)}" height="${(H6 * ky).toFixed(1)}" fill="#cbd5e1" stroke="#1e293b" stroke-width="2" />
-                        <text x="${((xStemBack + xStemFront)/2).toFixed(1)}" y="${((yStemTop + yFootTop)/2).toFixed(1)}" fill="#0f172a" font-size="10.5" font-weight="bold" text-anchor="middle">Thân: B3=${B3}m</text>
-                        <text x="${((xStemBack + xStemFront)/2).toFixed(1)}" y="${((yStemTop + yFootTop)/2 + 14).toFixed(1)}" fill="#475569" font-size="9" text-anchor="middle">H6=${H6}m</text>
+                            <!-- Thân mố B3 x H6 -->
+                            <rect x="${xStemBack.toFixed(1)}" y="${yStemTop.toFixed(1)}" width="${(B3 * kx).toFixed(1)}" height="${(H6 * ky).toFixed(1)}" fill="#cbd5e1" stroke="#1e293b" stroke-width="2" />
+                            <text x="${((xStemBack + xStemFront)/2).toFixed(1)}" y="${((yStemTop + yFootTop)/2).toFixed(1)}" fill="#0f172a" font-size="10.5" font-weight="bold" text-anchor="middle">Thân: B3=${B3}m</text>
+                            <text x="${((xStemBack + xStemFront)/2).toFixed(1)}" y="${((yStemTop + yFootTop)/2 + 14).toFixed(1)}" fill="#475569" font-size="9" text-anchor="middle">H6=${H6}m</text>
 
-                        <!-- Tường đỉnh B7 x H7 -->
-                        <rect x="${xStemBack.toFixed(1)}" y="${yWallTop.toFixed(1)}" width="${(B7 * kx).toFixed(1)}" height="${(H7 * ky).toFixed(1)}" fill="#64748b" stroke="#1e293b" stroke-width="1.5" />
-                        <text x="${((xStemBack + xWallFront)/2).toFixed(1)}" y="${(yWallTop - 5).toFixed(1)}" fill="#1e293b" font-size="8.5" font-weight="bold" text-anchor="middle">Đỉnh: ${B7}m×${H7}m</text>
+                            <!-- Tường đỉnh B7 x H7 -->
+                            <rect x="${xStemBack.toFixed(1)}" y="${yWallTop.toFixed(1)}" width="${(B7 * kx).toFixed(1)}" height="${(H7 * ky).toFixed(1)}" fill="#64748b" stroke="#1e293b" stroke-width="1.5" />
+                            <text x="${((xStemBack + xWallFront)/2).toFixed(1)}" y="${(yWallTop - 5).toFixed(1)}" fill="#1e293b" font-size="8.5" font-weight="bold" text-anchor="middle">Đỉnh: ${B7}m×${H7}m</text>
 
-                        <!-- Mấu đỡ bản quá độ -->
-                        <rect x="${(xStemBack - 16).toFixed(1)}" y="${(yStemTop + 5).toFixed(1)}" width="16" height="14" fill="#475569" stroke="#1e293b" />
+                            <!-- Mấu đỡ bản quá độ -->
+                            <rect x="${(xStemBack - 16).toFixed(1)}" y="${(yStemTop + 5).toFixed(1)}" width="16" height="14" fill="#475569" stroke="#1e293b" />
 
-                        <!-- Gối cầu KCN -->
-                        <rect x="${(xWallFront + 6).toFixed(1)}" y="${(yStemTop - 8).toFixed(1)}" width="22" height="8" fill="#ef4444" stroke="#991b1b" rx="1" />
-                        <text x="${(xWallFront + 35).toFixed(1)}" y="${(yStemTop - 2).toFixed(1)}" fill="#dc2626" font-size="8" font-weight="bold">Gối KCN</text>
+                            <!-- Gối cầu KCN -->
+                            <rect x="${(xWallFront + 6).toFixed(1)}" y="${(yStemTop - 8).toFixed(1)}" width="22" height="8" fill="#ef4444" stroke="#991b1b" rx="1" />
+                            <text x="${(xWallFront + 35).toFixed(1)}" y="${(yStemTop - 2).toFixed(1)}" fill="#dc2626" font-size="8" font-weight="bold">Gối KCN</text>
 
-                        <!-- Đường gióng kích thước Gót, Thân, Mũi -->
-                        <line x1="${xFootL.toFixed(1)}" y1="${(yFootBot + 12).toFixed(1)}" x2="${xStemBack.toFixed(1)}" y2="${(yFootBot + 12).toFixed(1)}" stroke="#1e293b" stroke-width="1.5" />
-                        <text x="${((xFootL + xStemBack)/2).toFixed(1)}" y="${(yFootBot + 23).toFixed(1)}" fill="#0f172a" font-size="8.5" font-weight="bold" text-anchor="middle">Gót ${B2}m</text>
+                            <!-- Đường gióng kích thước Gót, Thân, Mũi -->
+                            <line x1="${xFootL.toFixed(1)}" y1="${(yFootBot + 12).toFixed(1)}" x2="${xStemBack.toFixed(1)}" y2="${(yFootBot + 12).toFixed(1)}" stroke="#1e293b" stroke-width="1.5" />
+                            <text x="${((xFootL + xStemBack)/2).toFixed(1)}" y="${(yFootBot + 23).toFixed(1)}" fill="#0f172a" font-size="8.5" font-weight="bold" text-anchor="middle">Gót ${B2}m</text>
 
-                        <line x1="${xStemBack.toFixed(1)}" y1="${(yFootBot + 12).toFixed(1)}" x2="${xStemFront.toFixed(1)}" y2="${(yFootBot + 12).toFixed(1)}" stroke="#2563eb" stroke-width="1.5" />
-                        <text x="${((xStemBack + xStemFront)/2).toFixed(1)}" y="${(yFootBot + 23).toFixed(1)}" fill="#2563eb" font-size="8.5" font-weight="bold" text-anchor="middle">Thân ${B3}m</text>
+                            <line x1="${xStemBack.toFixed(1)}" y1="${(yFootBot + 12).toFixed(1)}" x2="${xStemFront.toFixed(1)}" y2="${(yFootBot + 12).toFixed(1)}" stroke="#2563eb" stroke-width="1.5" />
+                            <text x="${((xStemBack + xStemFront)/2).toFixed(1)}" y="${(yFootBot + 23).toFixed(1)}" fill="#2563eb" font-size="8.5" font-weight="bold" text-anchor="middle">Thân ${B3}m</text>
 
-                        <line x1="${xStemFront.toFixed(1)}" y1="${(yFootBot + 12).toFixed(1)}" x2="${xFootR.toFixed(1)}" y2="${(yFootBot + 12).toFixed(1)}" stroke="#059669" stroke-width="1.5" />
-                        <text x="${((xStemFront + xFootR)/2).toFixed(1)}" y="${(yFootBot + 23).toFixed(1)}" fill="#059669" font-size="8.5" font-weight="bold" text-anchor="middle">Mũi ${B4}m</text>
+                            <line x1="${xStemFront.toFixed(1)}" y1="${(yFootBot + 12).toFixed(1)}" x2="${xFootR.toFixed(1)}" y2="${(yFootBot + 12).toFixed(1)}" stroke="#059669" stroke-width="1.5" />
+                            <text x="${((xStemFront + xFootR)/2).toFixed(1)}" y="${(yFootBot + 23).toFixed(1)}" fill="#059669" font-size="8.5" font-weight="bold" text-anchor="middle">Mũi ${B4}m</text>
 
-                        <!-- Cọc móng -->
-                        <g>
-                            <rect x="${(xFootL + B2 * kx * 0.4).toFixed(1)}" y="${yFootBot.toFixed(1)}" width="${wPilePx.toFixed(1)}" height="55" fill="#334155" stroke="#0f172a" />
-                            <rect x="${(xStemFront + B4 * kx * 0.4).toFixed(1)}" y="${yFootBot.toFixed(1)}" width="${wPilePx.toFixed(1)}" height="55" fill="#334155" stroke="#0f172a" />
-                            <text x="${((xFootL + xFootR)/2).toFixed(1)}" y="${(yFootBot + 42).toFixed(1)}" fill="#1e293b" font-size="9" font-weight="bold" text-anchor="middle">Cọc D=${pileDia}m (Pcp=${this.formData.pile_capacity_allowable||4800}kN)</text>
-                        </g>
+                            <!-- Cọc móng -->
+                            <g>
+                                <rect x="${(xFootL + B2 * kx * 0.4).toFixed(1)}" y="${yFootBot.toFixed(1)}" width="${wPilePx.toFixed(1)}" height="55" fill="#334155" stroke="#0f172a" />
+                                <rect x="${(xStemFront + B4 * kx * 0.4).toFixed(1)}" y="${yFootBot.toFixed(1)}" width="${wPilePx.toFixed(1)}" height="55" fill="#334155" stroke="#0f172a" />
+                                <text x="${((xFootL + xFootR)/2).toFixed(1)}" y="${(yFootBot + 42).toFixed(1)}" fill="#1e293b" font-size="9" font-weight="bold" text-anchor="middle">Cọc D=${pileDia}m (Pcp=${this.formData.pile_capacity_allowable||4800}kN)</text>
+                            </g>
+                        </svg>
                     `;
                 },
 
@@ -2149,49 +2173,51 @@
                     const brg4 = xCapR - cantR * kx * 0.35;
 
                     return `
-                        <!-- XÀ MŨ VÁT ĐÚNG TỶ LỆ DẦM HẪNG -->
-                        <polygon points="${capPts}" fill="#93c5fd" stroke="#1e3a8a" stroke-width="2" />
-                        <text x="${cx}" y="18" fill="#1e3a8a" font-size="10" font-weight="bold" text-anchor="middle">
-                            XÀ MŨ: Lxm=${Lxm}m (Trái ${cantL}m + Giữa ${mid}m + Phải ${cantR}m) | h_ngàm=${hRoot}m | h_đầu=${hTipL}m
-                        </text>
+                        <svg width="520" height="315" viewBox="0 0 520 315" class="w-full h-auto max-h-[315px] select-none">
+                            <!-- XÀ MŨ VÁT ĐÚNG TỶ LỆ DẦM HẪNG -->
+                            <polygon points="${capPts}" fill="#93c5fd" stroke="#1e3a8a" stroke-width="2" />
+                            <text x="${cx}" y="18" fill="#1e3a8a" font-size="10" font-weight="bold" text-anchor="middle">
+                                XÀ MŨ: Lxm=${Lxm}m (Trái ${cantL}m + Giữa ${mid}m + Phải ${cantR}m) | h_ngàm=${hRoot}m | h_đầu=${hTipL}m
+                            </text>
 
-                        <!-- 4 Gối cầu trên xà mũ -->
-                        <rect x="${(brg1-9).toFixed(1)}" y="${yCapTop-6}" width="18" height="6" fill="#ef4444" stroke="#991b1b" rx="1" />
-                        <rect x="${(brg2-9).toFixed(1)}" y="${yCapTop-6}" width="18" height="6" fill="#ef4444" stroke="#991b1b" rx="1" />
-                        <rect x="${(brg3-9).toFixed(1)}" y="${yCapTop-6}" width="18" height="6" fill="#ef4444" stroke="#991b1b" rx="1" />
-                        <rect x="${(brg4-9).toFixed(1)}" y="${yCapTop-6}" width="18" height="6" fill="#ef4444" stroke="#991b1b" rx="1" />
+                            <!-- 4 Gối cầu trên xà mũ -->
+                            <rect x="${(brg1-9).toFixed(1)}" y="${yCapTop-6}" width="18" height="6" fill="#ef4444" stroke="#991b1b" rx="1" />
+                            <rect x="${(brg2-9).toFixed(1)}" y="${yCapTop-6}" width="18" height="6" fill="#ef4444" stroke="#991b1b" rx="1" />
+                            <rect x="${(brg3-9).toFixed(1)}" y="${yCapTop-6}" width="18" height="6" fill="#ef4444" stroke="#991b1b" rx="1" />
+                            <rect x="${(brg4-9).toFixed(1)}" y="${yCapTop-6}" width="18" height="6" fill="#ef4444" stroke="#991b1b" rx="1" />
 
-                        <!-- Badge Loại xà mũ RC / PT -->
-                        <rect x="${cx - 50}" y="${yCapTop + 4}" width="100" height="15" fill="#1e40af" rx="2" />
-                        <text x="${cx}" y="${yCapTop + 15}" fill="#ffffff" font-size="8" font-weight="bold" text-anchor="middle">
-                            ${this.formData.cap_type === 'PT' ? 'DỰ ỨNG LỰC (PT)' : 'BT THƯỜNG (RC)'}
-                        </text>
+                            <!-- Badge Loại xà mũ RC / PT -->
+                            <rect x="${cx - 50}" y="${yCapTop + 4}" width="100" height="15" fill="#1e40af" rx="2" />
+                            <text x="${cx}" y="${yCapTop + 15}" fill="#ffffff" font-size="8" font-weight="bold" text-anchor="middle">
+                                ${this.formData.cap_type === 'PT' ? 'DỰ ỨNG LỰC (PT)' : 'BT THƯỜNG (RC)'}
+                            </text>
 
-                        <!-- THÂN TRỤ NỐI TỪ ĐÁY XÀ MŨ XUỐNG ĐỈNH BỆ -->
-                        ${this.renderPierStemSvgScaled(cx, yCapBotRoot, yFootTop, kx, ky)}
+                            <!-- THÂN TRỤ NỐI TỪ ĐÁY XÀ MŨ XUỐNG ĐỈNH BỆ -->
+                            ${this.renderPierStemSvgScaled(cx, yCapBotRoot, yFootTop, kx, ky)}
 
-                        <!-- BỆ TRỤ Cbe x Bbe x Hbe -->
-                        <rect x="${xFootL.toFixed(1)}" y="${yFootTop.toFixed(1)}" width="${wFoot.toFixed(1)}" height="${(Hbe * ky).toFixed(1)}" fill="#94a3b8" stroke="#1e293b" stroke-width="2" rx="1" />
-                        <text x="${cx}" y="${(yFootTop + (Hbe * ky)/2 + 4).toFixed(1)}" fill="#ffffff" font-size="9.5" font-weight="bold" text-anchor="middle">
-                            Bệ trụ: Cbe=${Cbe}m × Bbe=${Bbe}m × Hbe=${Hbe}m
-                        </text>
+                            <!-- BỆ TRỤ Cbe x Bbe x Hbe -->
+                            <rect x="${xFootL.toFixed(1)}" y="${yFootTop.toFixed(1)}" width="${wFoot.toFixed(1)}" height="${(Hbe * ky).toFixed(1)}" fill="#94a3b8" stroke="#1e293b" stroke-width="2" rx="1" />
+                            <text x="${cx}" y="${(yFootTop + (Hbe * ky)/2 + 4).toFixed(1)}" fill="#ffffff" font-size="9.5" font-weight="bold" text-anchor="middle">
+                                Bệ trụ: Cbe=${Cbe}m × Bbe=${Bbe}m × Hbe=${Hbe}m
+                            </text>
 
-                        <!-- CỌC MÓNG DƯỚI BỆ -->
-                        <g>
-                            <rect x="${(xFootL + wFoot * 0.15 - 8).toFixed(1)}" y="${yFootBot.toFixed(1)}" width="16" height="42" fill="#334155" stroke="#0f172a" />
-                            <line x1="${(xFootL + wFoot * 0.15).toFixed(1)}" y1="${yFootBot.toFixed(1)}" x2="${(xFootL + wFoot * 0.15).toFixed(1)}" y2="${(yFootBot + 42).toFixed(1)}" stroke="#f8fafc" stroke-dasharray="2,2" />
-                            
-                            <rect x="${(cx - wFoot * 0.15 - 8).toFixed(1)}" y="${yFootBot.toFixed(1)}" width="16" height="42" fill="#334155" stroke="#0f172a" />
-                            <line x1="${(cx - wFoot * 0.15).toFixed(1)}" y1="${yFootBot.toFixed(1)}" x2="${(cx - wFoot * 0.15).toFixed(1)}" y2="${(yFootBot + 42).toFixed(1)}" stroke="#f8fafc" stroke-dasharray="2,2" />
-                            
-                            <rect x="${(cx + wFoot * 0.15 - 8).toFixed(1)}" y="${yFootBot.toFixed(1)}" width="16" height="42" fill="#334155" stroke="#0f172a" />
-                            <line x1="${(cx + wFoot * 0.15).toFixed(1)}" y1="${yFootBot.toFixed(1)}" x2="${(cx + wFoot * 0.15).toFixed(1)}" y2="${(yFootBot + 42).toFixed(1)}" stroke="#f8fafc" stroke-dasharray="2,2" />
-                            
-                            <rect x="${(xFootR - wFoot * 0.15 - 8).toFixed(1)}" y="${yFootBot.toFixed(1)}" width="16" height="42" fill="#334155" stroke="#0f172a" />
-                            <line x1="${(xFootR - wFoot * 0.15).toFixed(1)}" y1="${yFootBot.toFixed(1)}" x2="${(xFootR - wFoot * 0.15).toFixed(1)}" y2="${(yFootBot + 42).toFixed(1)}" stroke="#f8fafc" stroke-dasharray="2,2" />
-                            
-                            <text x="${cx}" y="${(yFootBot + 32).toFixed(1)}" fill="#1e293b" font-size="8.5" font-weight="bold" text-anchor="middle">Cọc D=${this.formData.pile_diameter||1.2}m (Pcp=${this.formData.pile_capacity_allowable||4800}kN)</text>
-                        </g>
+                            <!-- CỌC MÓNG DƯỚI BỆ -->
+                            <g>
+                                <rect x="${(xFootL + wFoot * 0.15 - 8).toFixed(1)}" y="${yFootBot.toFixed(1)}" width="16" height="42" fill="#334155" stroke="#0f172a" />
+                                <line x1="${(xFootL + wFoot * 0.15).toFixed(1)}" y1="${yFootBot.toFixed(1)}" x2="${(xFootL + wFoot * 0.15).toFixed(1)}" y2="${(yFootBot + 42).toFixed(1)}" stroke="#f8fafc" stroke-dasharray="2,2" />
+                                
+                                <rect x="${(cx - wFoot * 0.15 - 8).toFixed(1)}" y="${yFootBot.toFixed(1)}" width="16" height="42" fill="#334155" stroke="#0f172a" />
+                                <line x1="${(cx - wFoot * 0.15).toFixed(1)}" y1="${yFootBot.toFixed(1)}" x2="${(cx - wFoot * 0.15).toFixed(1)}" y2="${(yFootBot + 42).toFixed(1)}" stroke="#f8fafc" stroke-dasharray="2,2" />
+                                
+                                <rect x="${(cx + wFoot * 0.15 - 8).toFixed(1)}" y="${yFootBot.toFixed(1)}" width="16" height="42" fill="#334155" stroke="#0f172a" />
+                                <line x1="${(cx + wFoot * 0.15).toFixed(1)}" y1="${yFootBot.toFixed(1)}" x2="${(cx + wFoot * 0.15).toFixed(1)}" y2="${(yFootBot + 42).toFixed(1)}" stroke="#f8fafc" stroke-dasharray="2,2" />
+                                
+                                <rect x="${(xFootR - wFoot * 0.15 - 8).toFixed(1)}" y="${yFootBot.toFixed(1)}" width="16" height="42" fill="#334155" stroke="#0f172a" />
+                                <line x1="${(xFootR - wFoot * 0.15).toFixed(1)}" y1="${yFootBot.toFixed(1)}" x2="${(xFootR - wFoot * 0.15).toFixed(1)}" y2="${(yFootBot + 42).toFixed(1)}" stroke="#f8fafc" stroke-dasharray="2,2" />
+                                
+                                <text x="${cx}" y="${(yFootBot + 32).toFixed(1)}" fill="#1e293b" font-size="8.5" font-weight="bold" text-anchor="middle">Cọc D=${this.formData.pile_diameter||1.2}m (Pcp=${this.formData.pile_capacity_allowable||4800}kN)</text>
+                            </g>
+                        </svg>
                     `;
                 },
 

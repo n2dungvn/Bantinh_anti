@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+import math
 from typing import List, Dict, Tuple, Optional, Any
 from .model import PierModel
 from ..abutment.combinations import CombinationResult
@@ -52,7 +53,11 @@ def analyze_pier_piles(
             ts_piles.append(TSPile(id=pid, name=pname, x=px, y=py, diameter=pd))
             piles_simple.append(Pile(id=pid, x=px, y=py, diameter=pd))
     else:
-        # Tạo tọa độ các cọc từ danh sách hàng cọc
+        # Tạo tọa độ các cọc từ danh sách hàng cọc đổi về hệ tọa độ vuông góc (Orthogonal)
+        skew_deg = getattr(model, "skew_angle", 90.0)
+        alpha_rad = math.radians(skew_deg)
+        tan_alpha = math.tan(alpha_rad) if abs(skew_deg - 90.0) > 0.01 else 0.0
+
         for row in model.pile_rows:
             r_count = row.get("count", 0) if isinstance(row, dict) else getattr(row, "count", 0)
             r_spacing = row.get("spacing", 1.0) if isinstance(row, dict) else getattr(row, "spacing", 1.0)
@@ -63,18 +68,21 @@ def analyze_pier_piles(
             start_y = -total_width / 2.0
             for j in range(r_count):
                 y_pos = start_y + j * r_spacing
+                # Chuyển đổi tọa độ sang hệ trục vuông góc của TS-Pile:
+                # X_ortho = r_x - y_pos / tan(alpha)
+                x_ortho = r_x - (y_pos / tan_alpha) if tan_alpha != 0.0 else r_x
                 pname = f"P{pile_id}"
                 ts_piles.append(TSPile(
                     id=pile_id,
                     name=pname,
-                    x=r_x,
-                    y=y_pos,
+                    x=round(x_ortho, 4),
+                    y=round(y_pos, 4),
                     diameter=model.pile_diameter
                 ))
                 piles_simple.append(Pile(
                     id=pile_id,
-                    x=r_x,
-                    y=y_pos,
+                    x=round(x_ortho, 4),
+                    y=round(y_pos, 4),
                     diameter=model.pile_diameter
                 ))
                 pile_id += 1
