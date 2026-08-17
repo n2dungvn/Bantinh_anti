@@ -120,8 +120,11 @@ def generate_abutment_html_report(result: AbutmentAnalysisResult, output_path: s
 
     svg_piles_list = ""
     for p in piles.piles:
-        p_shift = ((p.y * scaleY) / tanA) if tanA != 0 else 0
-        pcx = cx + p.x * scaleX - p_shift
+        # p.x đang là tọa độ vuông góc. Phục hồi lại tọa độ xiên (dọc bệ)
+        p_row_x = p.x + (p.y / tanA) if tanA != 0 else p.x
+        # Độ vát chéo trên bản vẽ (phải dùng scaleY để giữ đúng góc alpha)
+        visual_shift = (p.y * scaleY) / tanA if tanA != 0 else 0
+        pcx = cx + p_row_x * scaleX - visual_shift
         pcy = cy + p.y * scaleY
         svg_piles_list += f"""
         <g>
