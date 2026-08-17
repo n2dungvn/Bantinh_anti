@@ -31,6 +31,13 @@ class PierLoadsSummary:
     DC2_footing: float
     WB_total: float
     WA_total: float
+    WS_kcn_des: float = 0.0
+    WS_pier_des: float = 0.0
+    WS_kcn_25: float = 0.0
+    WS_pier_25: float = 0.0
+    WL_force: float = 0.0
+    WA_stem_long: float = 0.0
+    WB_footing: float = 0.0
 
 
 def calculate_pier_loads(model: PierModel) -> PierLoadsSummary:
@@ -419,5 +426,12 @@ def calculate_pier_loads(model: PierModel) -> PierLoadsSummary:
         DC2_stem=DC2_stem,
         DC2_footing=DC2_footing,
         WB_total=WB_total,
-        WA_total=WA_total
+        WA_total=WA_total,
+        WS_kcn_des=WS_kcn_ngang_des,
+        WS_pier_des=WS_pier_ngang_des,
+        WS_kcn_25=WS_kcn_ngang_25,
+        WS_pier_25=WS_pier_ngang_25,
+        WL_force=WL_ngang,
+        WA_stem_long=WA_total,
+        WB_footing=WB_total
     )

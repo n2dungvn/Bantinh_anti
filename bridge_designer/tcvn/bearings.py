@@ -63,6 +63,7 @@ class BearingForcesResult:
     H_FR: float = 0.0          # Lực ma sát gối trượt FR (kN)
     F_bearing_left_TU: float = 0.0   # Lực gối trái do TU
     F_bearing_right_TU: float = 0.0  # Lực gối phải do TU
+    L_exp: float = 0.0         # Khoảng cách giãn nở tới tâm co giãn (m)
 
 
 class BearingChainSolver:
@@ -186,5 +187,6 @@ class BearingChainSolver:
             H_SH=round(H_SH, 2),
             H_FR=round(FR_total, 2),
             F_bearing_left_TU=round(FR_left, 2),
-            F_bearing_right_TU=round(FR_right, 2)
+            F_bearing_right_TU=round(FR_right, 2),
+            L_exp=round(L_exp, 2)
         )
