@@ -231,13 +231,15 @@ class PierModel:
     tendon_trajectories: List[Dict[str, Any]] = field(default_factory=list)
 
     # Bệ trụ
-    rebar_diam_footing_bot_x: float = 28.0 # Thép đáy phương X (dọc cầu)
+    rebar_diam_footing_bot_x: float = 28.0     # Thép đáy phương dọc cầu
     rebar_spacing_footing_bot_x: float = 120.0
-    rebar_diam_footing_bot_y: float = 28.0 # Thép đáy phương Y (ngang cầu)
-    rebar_spacing_footing_bot_y: float = 120.0
-    rebar_diam_footing_top_x: float = 20.0 # Thép đỉnh bệ (chịu nén)
+    rebar_layers_footing_bot_x: int = 1
+    rebar_diam_footing_top_x: float = 20.0     # Thép đỉnh dọc cầu
     rebar_spacing_footing_top_x: float = 150.0
-    rebar_diam_footing_top_y: float = 20.0
+    rebar_diam_footing_bot_y: float = 20.0     # Thép đáy phương ngang cầu
+    rebar_spacing_footing_bot_y: float = 150.0
+    rebar_layers_footing_bot_y: int = 1
+    rebar_diam_footing_top_y: float = 20.0     # Thép đỉnh ngang cầu
     rebar_spacing_footing_top_y: float = 150.0
     stirrup_diam_footing: float = 16.0     # Thép đai chống cắt bệ trụ
     stirrup_spacing_footing: float = 200.0

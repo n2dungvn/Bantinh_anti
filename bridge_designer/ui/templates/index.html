@@ -713,30 +713,45 @@
                             <!-- 4. BỆ MỐ -->
                             <div class="bg-emerald-50/50 p-2.5 rounded border border-emerald-200">
                                 <h4 class="font-bold text-emerald-950 mb-1.5">4. Cốt Thép Bệ Mố (Phương Dọc Cầu + Phương Ngang Cầu)</h4>
-                                <div class="grid grid-cols-3 gap-2">
+                                <div class="grid grid-cols-4 gap-2">
                                     <div>
-                                        <label class="block text-slate-600">Thép ĐÁY phương dọc (uốn chính) Ф</label>
+                                        <label class="block text-slate-600">Thép ĐÁY dọc cầu Ф</label>
                                         <input type="number" step="1" x-model.number="formData.rebar_diam_footing_bot_x" class="w-full border border-slate-300 rounded p-1 font-bold text-emerald-800">
                                     </div>
                                     <div>
-                                        <label class="block text-slate-600">Bước thép đáy dọc cầu s (mm)</label>
-                                        <input type="number" step="10" x-model.number="formData.rebar_spacing_footing_bot_x" class="w-full border border-slate-300 rounded p-1 font-bold">
+                                        <label class="block text-slate-600">Bước đáy dọc cầu s (mm)</label>
+                                        <input type="number" step="10" x-model.number="formData.rebar_spacing_footing_bot_x" class="w-full border border-slate-300 rounded p-1 font-bold text-emerald-800">
                                     </div>
                                     <div>
-                                        <label class="block text-slate-600">Thép ĐỈNH phương dọc (nén gót) Ф</label>
-                                        <input type="number" step="1" x-model.number="formData.rebar_diam_footing_top_x" class="w-full border border-slate-300 rounded p-1 font-bold text-emerald-800">
+                                        <label class="block text-slate-600">Số lưới đáy dọc cầu</label>
+                                        <input type="number" step="1" x-model.number="formData.rebar_layers_footing_bot_x" class="w-full border border-slate-300 rounded p-1 font-bold text-emerald-800">
                                     </div>
                                     <div>
-                                        <label class="block text-slate-600">Thép ĐÁY phương ngang (phân bố) Ф</label>
-                                        <input type="number" step="1" x-model.number="formData.rebar_diam_footing_bot_y" class="w-full border border-slate-300 rounded p-1">
+                                        <label class="block text-slate-600">Thép ĐỈNH dọc cầu Ф</label>
+                                        <input type="number" step="1" x-model.number="formData.rebar_diam_footing_top_x" class="w-full border border-slate-300 rounded p-1">
+                                    </div>
+                                    
+                                    <div>
+                                        <label class="block text-slate-600">Thép ĐÁY ngang cầu Ф</label>
+                                        <input type="number" step="1" x-model.number="formData.rebar_diam_footing_bot_y" class="w-full border border-slate-300 rounded p-1 font-bold text-emerald-800">
                                     </div>
                                     <div>
-                                        <label class="block text-slate-600">Thép đai chống cắt bệ Ф</label>
-                                        <input type="number" step="1" x-model.number="formData.stirrup_diam_footing" class="w-full border border-slate-300 rounded p-1">
+                                        <label class="block text-slate-600">Bước đáy ngang s (mm)</label>
+                                        <input type="number" step="10" x-model.number="formData.rebar_spacing_footing_bot_y" class="w-full border border-slate-300 rounded p-1 font-bold text-emerald-800">
                                     </div>
                                     <div>
-                                        <label class="block text-slate-600">Bước đai bệ s (mm)</label>
-                                        <input type="number" step="10" x-model.number="formData.stirrup_spacing_footing" class="w-full border border-slate-300 rounded p-1">
+                                        <label class="block text-slate-600">Số lưới đáy ngang</label>
+                                        <input type="number" step="1" x-model.number="formData.rebar_layers_footing_bot_y" class="w-full border border-slate-300 rounded p-1 font-bold text-emerald-800">
+                                    </div>
+                                    <div class="col-span-1 grid grid-cols-2 gap-1">
+                                        <div>
+                                            <label class="block text-slate-600">Đai bệ Ф</label>
+                                            <input type="number" step="1" x-model.number="formData.stirrup_diam_footing" class="w-full border border-slate-300 rounded p-1">
+                                        </div>
+                                        <div>
+                                            <label class="block text-slate-600">Bước s</label>
+                                            <input type="number" step="10" x-model.number="formData.stirrup_spacing_footing" class="w-full border border-slate-300 rounded p-1">
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -842,26 +857,45 @@
 
                             <div class="bg-emerald-50/50 p-2.5 rounded border border-emerald-200">
                                 <h4 class="font-bold text-blue-900 mb-1.5">3. Cốt Thép Bệ Trụ</h4>
-                                <div class="grid grid-cols-3 gap-2">
+                                <div class="grid grid-cols-4 gap-2">
                                     <div>
                                         <label class="block text-slate-600">Thép đáy phương X Ф</label>
                                         <input type="number" step="1" x-model.number="formData.rebar_diam_footing_bot_x" class="w-full border border-slate-300 rounded p-1 font-bold text-blue-700">
                                     </div>
                                     <div>
-                                        <label class="block text-slate-600">Thép đáy phương Y Ф</label>
-                                        <input type="number" step="1" x-model.number="formData.rebar_diam_footing_bot_y" class="w-full border border-slate-300 rounded p-1 font-bold text-blue-700">
+                                        <label class="block text-slate-600">Bước đáy X s (mm)</label>
+                                        <input type="number" step="10" x-model.number="formData.rebar_spacing_footing_bot_x" class="w-full border border-slate-300 rounded p-1 font-bold text-blue-700">
+                                    </div>
+                                    <div>
+                                        <label class="block text-slate-600">Số lưới phương X</label>
+                                        <input type="number" step="1" x-model.number="formData.rebar_layers_footing_bot_x" class="w-full border border-slate-300 rounded p-1 font-bold text-blue-700">
                                     </div>
                                     <div>
                                         <label class="block text-slate-600">Thép đỉnh bệ (nén) Ф</label>
                                         <input type="number" step="1" x-model.number="formData.rebar_diam_footing_top_x" class="w-full border border-slate-300 rounded p-1 font-bold text-emerald-700">
                                     </div>
+
                                     <div>
-                                        <label class="block text-slate-600">Thép đai bệ trụ Ф</label>
-                                        <input type="number" step="1" x-model.number="formData.stirrup_diam_footing" class="w-full border border-slate-300 rounded p-1">
+                                        <label class="block text-slate-600">Thép đáy phương Y Ф</label>
+                                        <input type="number" step="1" x-model.number="formData.rebar_diam_footing_bot_y" class="w-full border border-slate-300 rounded p-1 font-bold text-blue-700">
                                     </div>
                                     <div>
-                                        <label class="block text-slate-600">Bước đai bệ s (mm)</label>
-                                        <input type="number" step="10" x-model.number="formData.stirrup_spacing_footing" class="w-full border border-slate-300 rounded p-1">
+                                        <label class="block text-slate-600">Bước đáy Y s (mm)</label>
+                                        <input type="number" step="10" x-model.number="formData.rebar_spacing_footing_bot_y" class="w-full border border-slate-300 rounded p-1 font-bold text-blue-700">
+                                    </div>
+                                    <div>
+                                        <label class="block text-slate-600">Số lưới phương Y</label>
+                                        <input type="number" step="1" x-model.number="formData.rebar_layers_footing_bot_y" class="w-full border border-slate-300 rounded p-1 font-bold text-blue-700">
+                                    </div>
+                                    <div class="col-span-1 grid grid-cols-2 gap-1">
+                                        <div>
+                                            <label class="block text-slate-600">Đai bệ Ф</label>
+                                            <input type="number" step="1" x-model.number="formData.stirrup_diam_footing" class="w-full border border-slate-300 rounded p-1">
+                                        </div>
+                                        <div>
+                                            <label class="block text-slate-600">Bước s</label>
+                                            <input type="number" step="10" x-model.number="formData.stirrup_spacing_footing" class="w-full border border-slate-300 rounded p-1">
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -2578,13 +2612,15 @@
                     let svgStr = '';
 
                     for (const p of piles) {
-                        const shiftX = Math.abs(alphaDeg - 90.0) > 0.01 ? ((p.y * scaleY) / Math.tan(alphaRad)) : 0;
-                        const cx = (260 + p.x * scaleX - shiftX).toFixed(1);
+                        // p.x trong UI là r.x (chưa vuông góc)
+                        const p_row_x = p.x;
+                        const visual_shift = Math.abs(alphaDeg - 90.0) > 0.01 ? (- (p.y * scaleY) / Math.tan(alphaRad)) : 0;
+                        const cx = (260 + p_row_x * scaleX + visual_shift).toFixed(1);
                         const cy = (150 + p.y * scaleY).toFixed(1);
                         svgStr += `<g>
                             <circle cx="${cx}" cy="${cy}" r="${rPx}" fill="#2563eb" stroke="#1e3a8a" stroke-width="1.5" />
-                            <line x1="${cx - 5}" y1="${cy}" x2="${cx + 5}" y2="${cy}" stroke="#ffffff" stroke-width="1" />
-                            <line x1="${cx}" y1="${cy - 5}" x2="${cx}" y2="${cy + 5}" stroke="#ffffff" stroke-width="1" />
+                            <line x1="${parseFloat(cx) - 5}" y1="${cy}" x2="${parseFloat(cx) + 5}" y2="${cy}" stroke="#ffffff" stroke-width="1" />
+                            <line x1="${cx}" y1="${parseFloat(cy) - 5}" x2="${cx}" y2="${parseFloat(cy) + 5}" stroke="#ffffff" stroke-width="1" />
                             <text x="${cx}" y="${(parseFloat(cy) + 3.5).toFixed(1)}" fill="#ffffff" font-size="8.5" font-weight="bold" text-anchor="middle">${p.id}</text>
                         </g>`;
                     }

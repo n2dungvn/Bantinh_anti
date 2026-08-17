@@ -69,8 +69,8 @@ def analyze_pier_piles(
             for j in range(r_count):
                 y_pos = start_y + j * r_spacing
                 # Chuyển đổi tọa độ sang hệ trục vuông góc của TS-Pile:
-                # X_ortho = r_x - y_pos / tan(alpha)
-                x_ortho = r_x - (y_pos / tan_alpha) if tan_alpha != 0.0 else r_x
+                # X_ortho = r_x + y_pos / tan(alpha)
+                x_ortho = r_x + (y_pos / tan_alpha) if tan_alpha != 0.0 else r_x
                 pname = f"P{pile_id}"
                 ts_piles.append(TSPile(
                     id=pile_id,

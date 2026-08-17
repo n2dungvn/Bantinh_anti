@@ -463,7 +463,8 @@ def check_pier_footing(
 
     # Cốt thép đáy phương X (dọc cầu - chịu Muy)
     A_bar_x = math.pi * (model.rebar_diam_footing_bot_x ** 2) / 4.0
-    As_x = (b_footing / model.rebar_spacing_footing_bot_x) * A_bar_x
+    layers_x = getattr(model, 'rebar_layers_footing_bot_x', 1)
+    As_x = (b_footing / model.rebar_spacing_footing_bot_x) * A_bar_x * layers_x
 
     flex_x = check_flexure_rectangular(
         b=b_footing, h=h_footing, dc=model.cover_footing, As=As_x,
@@ -477,7 +478,8 @@ def check_pier_footing(
 
     # Cốt thép đáy phương Y (ngang cầu - chịu Mux)
     A_bar_y = math.pi * (model.rebar_diam_footing_bot_y ** 2) / 4.0
-    As_y = (l_footing / model.rebar_spacing_footing_bot_y) * A_bar_y
+    layers_y = getattr(model, 'rebar_layers_footing_bot_y', 1)
+    As_y = (l_footing / model.rebar_spacing_footing_bot_y) * A_bar_y * layers_y
 
     flex_y = check_flexure_rectangular(
         b=l_footing, h=h_footing, dc=model.cover_footing, As=As_y,

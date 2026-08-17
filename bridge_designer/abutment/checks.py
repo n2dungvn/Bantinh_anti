@@ -434,7 +434,8 @@ def check_abutment_footing(
 
     # Cốt thép đáy mép trước
     A_bar_ff = math.pi * (model.rebar_diam_footing_bot_front ** 2) / 4.0
-    As_front = (b_footing / model.rebar_spacing_footing_bot_front) * A_bar_ff
+    layers = getattr(model, 'rebar_layers_footing_bot_x', 1)
+    As_front = (b_footing / model.rebar_spacing_footing_bot_front) * A_bar_ff * layers
 
     flex_front = check_flexure_rectangular(
         b=b_footing, h=h_footing, dc=model.cover_footing, As=As_front,
@@ -453,7 +454,7 @@ def check_abutment_footing(
 
     # Cốt thép đáy mép sau
     A_bar_rf = math.pi * (model.rebar_diam_footing_bot_rear ** 2) / 4.0
-    As_rear = (b_footing / model.rebar_spacing_footing_bot_rear) * A_bar_rf
+    As_rear = (b_footing / model.rebar_spacing_footing_bot_rear) * A_bar_rf * layers
 
     flex_rear = check_flexure_rectangular(
         b=b_footing, h=h_footing, dc=model.cover_footing, As=As_rear,

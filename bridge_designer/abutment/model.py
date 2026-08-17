@@ -178,18 +178,27 @@ class AbutmentModel:
     # Bệ mố
     rebar_diam_footing_bot_x: float = 28.0     # Thép đáy phương dọc cầu (Lớp dưới chịu uốn chính - Mũi & Gót)
     rebar_spacing_footing_bot_x: float = 120.0 # Bước thép đáy dọc cầu (mm)
+    rebar_layers_footing_bot_x: int = 1        # Số lưới thép đáy phương dọc cầu
     rebar_diam_footing_top_x: float = 20.0     # Thép đỉnh phương dọc cầu (Lớp trên / Thép nén gót)
     rebar_spacing_footing_top_x: float = 150.0 # Bước thép đỉnh dọc cầu (mm)
     rebar_diam_footing_bot_y: float = 20.0     # Thép đáy phương ngang cầu (Phân bố lớp dưới)
-    rebar_spacing_footing_bot_y: float = 150.0
+    rebar_spacing_footing_bot_y: float = 150.0 # Bước thép đáy phương ngang cầu
+    rebar_layers_footing_bot_y: int = 1        # Số lưới thép đáy phương ngang cầu
     rebar_diam_footing_top_y: float = 20.0     # Thép đỉnh phương ngang cầu (Phân bố lớp trên)
     rebar_spacing_footing_top_y: float = 150.0
-    rebar_diam_footing_bot_front: float = 28.0 # Alias
-    rebar_spacing_footing_bot_front: float = 120.0
-    rebar_diam_footing_bot_rear: float = 28.0  # Alias
-    rebar_spacing_footing_bot_rear: float = 120.0
-    rebar_diam_footing_top: float = 20.0       # Alias
-    rebar_spacing_footing_top: float = 150.0
+    
+    @property
+    def rebar_diam_footing_bot_front(self) -> float: return self.rebar_diam_footing_bot_x
+    @property
+    def rebar_spacing_footing_bot_front(self) -> float: return self.rebar_spacing_footing_bot_x
+    @property
+    def rebar_diam_footing_bot_rear(self) -> float: return self.rebar_diam_footing_bot_x
+    @property
+    def rebar_spacing_footing_bot_rear(self) -> float: return self.rebar_spacing_footing_bot_x
+    @property
+    def rebar_diam_footing_top(self) -> float: return self.rebar_diam_footing_top_x
+    @property
+    def rebar_spacing_footing_top(self) -> float: return self.rebar_spacing_footing_top_x
     stirrup_diam_footing: float = 16.0         # Thép đai chống cắt bệ mố
     stirrup_spacing_footing: float = 200.0
     stirrup_legs_footing: int = 4

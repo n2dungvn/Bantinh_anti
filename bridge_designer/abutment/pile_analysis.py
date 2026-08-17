@@ -71,8 +71,8 @@ def analyze_abutment_piles(
             for j in range(row.count):
                 y_pos = start_y + j * row.spacing
                 # Chuyển đổi tọa độ sang hệ trục vuông góc của TS-Pile:
-                # X_ortho = row.x - y_pos / tan(alpha)
-                x_ortho = row.x - (y_pos / tan_alpha) if tan_alpha != 0.0 else row.x
+                # X_ortho = row.x + y_pos / tan(alpha)
+                x_ortho = row.x + (y_pos / tan_alpha) if tan_alpha != 0.0 else row.x
                 pname = f"P{pile_id}"
                 ts_piles.append(TSPile(
                     id=pile_id,
