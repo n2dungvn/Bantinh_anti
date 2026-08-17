@@ -109,21 +109,40 @@ def calculate_pier_loads(model: PierModel) -> PierLoadsSummary:
             V_sub = V_footing + Ag_bot * h_stem_sub
         WB_total = V_sub * gw
 
-    # 4. HOẠT TẢI XE HL-93 (2 NHỊP & 1 NHỊP)
-    Ls1 = model.Ls1
-    Ls2 = model.Ls2
+    # 4. HOẠT TẢI XE HL-93 (ĐƯỜNG ẢNH HƯỞNG CHO 2 NHỊP Ls1, Ls2 & 1 NHỊP)
+    Ls1 = max(1.0, model.Ls1)
+    Ls2 = max(1.0, model.Ls2)
+    IM = model.IM
+    qlan = model.qlan
 
-    # Phản lực xe tải lên trụ:
-    # 2 nhịp (đặt xe bất lợi nhất qua gối trụ):
-    # R_truck_2span ~ 145 + 145*(1 - 4.3/Ls1) + 35*(1 - 8.6/Ls1) + ...
-    R_truck_1span = (145.0 * Ls1 + 145.0 * max(0.0, Ls1 - 4.3) + 35.0 * max(0.0, Ls1 - 8.6)) / Ls1
-    R_tandem_1span = (110.0 * Ls1 + 110.0 * max(0.0, Ls1 - 1.2)) / Ls1
-    R_axle_1span = max(R_truck_1span, R_tandem_1span)
-    R_lane_1span = model.qlan * Ls1 / 2.0
-    R_1lane_1span_no_m = R_axle_1span * (1.0 + model.IM) + R_lane_1span
+    # 4.1 Phản lực 1 nhịp trái Ls1 do Xe tải, Xe 2 trục và Tải làn
+    R_truck_s1 = (145.0 * Ls1 + 145.0 * max(0.0, Ls1 - 4.3) + 35.0 * max(0.0, Ls1 - 8.6)) / Ls1
+    R_tandem_s1 = (110.0 * Ls1 + 110.0 * max(0.0, Ls1 - 1.2)) / Ls1
+    R_axle_s1 = max(R_truck_s1, R_tandem_s1)
+    R_lane_s1 = qlan * Ls1 / 2.0
+    R_1lane_s1_no_m = R_axle_s1 * (1.0 + IM) + R_lane_s1
 
-    # 2 nhịp giản đơn chất cả 2 bên:
-    R_1lane_2span_no_m = 2.0 * R_1lane_1span_no_m
+    # 4.2 Phản lực 1 nhịp phải Ls2 do Xe tải, Xe 2 trục và Tải làn
+    R_truck_s2 = (145.0 * Ls2 + 145.0 * max(0.0, Ls2 - 4.3) + 35.0 * max(0.0, Ls2 - 8.6)) / Ls2
+    R_tandem_s2 = (110.0 * Ls2 + 110.0 * max(0.0, Ls2 - 1.2)) / Ls2
+    R_axle_s2 = max(R_truck_s2, R_tandem_s2)
+    R_lane_s2 = qlan * Ls2 / 2.0
+    R_1lane_s2_no_m = R_axle_s2 * (1.0 + IM) + R_lane_s2
+
+    # 4.3 Phản lực chất cả 2 nhịp Ls1 và Ls2 (Ảnh hưởng đường ảnh hưởng đỉnh trụ):
+    # - Xe tải đặt trục 145kN ngay trên đỉnh trụ, 2 trục còn lại ở 2 nhịp:
+    R_truck_2span_single = 145.0 + 145.0 * max(0.0, 1.0 - 4.3 / Ls1) + 35.0 * max(0.0, 1.0 - 4.3 / Ls2)
+    # - Trường hợp 2 đoàn xe tải 90% (TCVN 11823-3 Điều 3.6.1.3.1):
+    R_truck_2span_dual = 0.90 * (R_truck_s1 + R_truck_s2)
+    R_truck_2span_max = max(R_truck_2span_single, R_truck_2span_dual)
+
+    # - Xe 2 trục đặt qua đỉnh trụ:
+    R_tandem_2span = 110.0 * max(0.0, 1.0 - 0.6 / Ls1) + 110.0 * max(0.0, 1.0 - 0.6 / Ls2)
+    R_axle_2span = max(R_truck_2span_max, R_tandem_2span)
+    R_lane_2span = qlan * (Ls1 + Ls2) / 2.0
+
+    R_1lane_2span_no_m = R_axle_2span * (1.0 + IM) + R_lane_2span
+    R_1lane_1span_no_m = max(R_1lane_s1_no_m, R_1lane_s2_no_m)
 
     # Hàng gối lệch lớn nhất e_max (m)
     e_max = max(abs(model.e_left), abs(model.e_right))
@@ -134,7 +153,7 @@ def calculate_pier_loads(model: PierModel) -> PierLoadsSummary:
     w_lane = 3.6
     first_lane_y = model.width_Bxe / 2.0 - 0.6 - 1.8 # tim làn ngoài cùng
 
-    # 4.1 Chất 2 nhịp (cho N max)
+    # 4.4 Chất 2 nhịp (cho N max)
     for k in range(1, model.num_lanes + 1):
         m_k = get_multi_lane_factor(k)
         N_k = k * R_1lane_2span_no_m * m_k

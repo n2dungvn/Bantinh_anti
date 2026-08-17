@@ -146,7 +146,7 @@
         <tr><td>Mặt cầu</td><td>Bề rộng cầu / Bề rộng xe</td><td>W / Bxe</td><td>23.75 / 22.75</td><td>m</td><td>6 làn xe</td></tr>
         <tr><td>Xà mũ vát</td><td>Dài / Cao ngàm / Cao đầu / Dài cánh</td><td>Lxm / Hroot / Htip / Lcant</td><td>23.55 / 2.20 / 1.20 / 7.00</td><td>m</td><td>Loại: RC</td></tr>
         <tr><td>Thân trụ</td><td>Kích thước thân / Chiều cao / K/c tim s</td><td>bth1 × hth1 / Hth / s</td><td>5.50 × 1.60 / 8.40 / 4.00</td><td>m</td><td>Trụ 1 Thân Đơn</td></tr>
-        <tr><td>Bệ trụ</td><td>Rộng dọc × Dài ngang × Cao</td><td>Bbe × Cbe × Hbe</td><td>6.00 × 11.40 × 2.00</td><td>m</td><td>Góc chéo α = 90°</td></tr>
+        <tr><td>Bệ trụ</td><td>Rộng dọc × Dài ngang × Cao</td><td>Bbe × Cbe × Hbe</td><td>6.00 × 11.40 × 2.00</td><td>m</td><td>Góc chéo α = 90.0°</td></tr>
         <tr><td>Bê tông</td><td>Cường độ chịu nén f'c / Khối lượng thể tích</td><td>f'c / γ_c</td><td>30.0 / 24.5</td><td>MPa / kN/m³</td><td>Bê tông kết cấu</td></tr>
         <tr><td>Cốt thép</td><td>Giới hạn chảy / Mô đun đàn hồi</td><td>fy / Es</td><td>400.0 / 200000</td><td>MPa</td><td>CB400-V</td></tr>
         <tr><td>Móng cọc</td><td>Đường kính D / Số lượng cọc</td><td>D / n</td><td>1.20 / 8</td><td>m / cọc</td><td>Sức chịu tải Pcp = 4800.0 kN</td></tr>
@@ -161,14 +161,14 @@
         <tr><td>DW</td><td>Tĩnh tải lớp phủ & tiện ích</td><td>DW trái + DW phải</td><td>1368.8 kN</td><td>Tại tim gối</td></tr>
         <tr><td>DC2</td><td>Tự trọng bê tông Trụ</td><td>Xà mũ + Thân + Bệ</td><td>8452.7 kN</td><td>Trọng tâm các khối</td></tr>
         <tr><td>PL</td><td>Hoạt tải người đi bộ</td><td>pPL × bpl × (L1+L2)/2</td><td>0.0 kN</td><td>Phân bố lề bộ hành</td></tr>
-        <tr><td>WS_des</td><td>Gió KCN & Trụ (V_tk=38m/s)</td><td>Tổ hợp Cường độ III (không có xe)</td><td>H_kcn=160.4 kN, H_pier=56.5 kN</td><td>Đỉnh gối & thân</td></tr>
+        <tr><td>WS_des</td><td>Gió KCN & Trụ (V_tk=38.0m/s)</td><td>Tổ hợp Cường độ III (không có xe)</td><td>H_kcn=160.4 kN, H_pier=56.5 kN</td><td>Đỉnh gối & thân</td></tr>
         <tr><td>WS_25</td><td>Gió KCN & Trụ (V=25m/s)</td><td>Tổ hợp Cường độ V & Sử dụng I (có xe)</td><td>H_kcn=55.8 kN, H_pier=19.7 kN</td><td>Đỉnh gối & thân</td></tr>
         <tr><td>WL</td><td>Gió thổi lên hoạt tải xe (0.14 kN/m²)</td><td>Tổ hợp Cường độ V & Sử dụng I</td><td>H_wl=54.8 kN</td><td>Cao 1.8m trên mặt cầu</td></tr>
-        <tr><td>WA & WB</td><td>Dòng chảy nước & Đẩy nổi</td><td>p = 0.514·CD·V² (V=0m/s)</td><td>WA_dọc=0.0 kN, WB=0.0 kN</td><td>Đáy thân & bệ</td></tr>
+        <tr><td>WA & WB</td><td>Dòng chảy nước & Đẩy nổi</td><td>p = 0.514·CD·V² (V=0.0m/s)</td><td>WA_dọc=0.0 kN, WB=0.0 kN</td><td>Đáy thân & bệ</td></tr>
         <tr><td>TU+ / TU-</td><td>Biến dạng nhiệt độ (ΔT=±20°C)</td><td>Giải chuỗi gối 1D theo L_exp=-38.20m</td><td>TU+ = 283.8 kN, TU- = 283.8 kN</td><td>Mặt gối đỉnh trụ</td></tr>
         <tr><td>CR & SH</td><td>Từ biến & Co ngót bê tông dầm</td><td>ε_cr=300×10⁻⁶, ε_sh=200×10⁻⁶</td><td>H_CR = 110.0 kN, H_SH = 61.1 kN</td><td>Mặt gối đỉnh trụ</td></tr>
         <tr><td>FR</td><td>Ma sát gối chậu trượt (μ=0.05)</td><td>FR = μ · ΣN_gối_trượt</td><td>H_FR = ±369.5 kN</td><td>Mặt gối đỉnh trụ</td></tr>
-        <tr><td>EQ</td><td>Động đất tác dụng lên Trụ</td><td>Gia tốc A=0.1108, S=1.2, R_stem=3, R_móng=1.0</td><td>Tải quán tính</td><td>Tâm khối lượng</td></tr>
+        <tr><td>EQ</td><td>Động đất tác dụng lên Trụ</td><td>Gia tốc A=0.1108, S=1.2, R_stem=3.0, R_móng=1.0</td><td>Tải quán tính</td><td>Tâm khối lượng</td></tr>
         <tr><td>CT</td><td>Va xe ô tô vào thân trụ</td><td>TCVN 11823-3 Điều 3.6.5</td><td>1800.0 kN</td><td>Cao độ z=3.2m</td></tr>
         <tr><td>CV</td><td>Va tàu thủy thông thuyền</td><td>TCVN 11823-3 Điều 3.14 (Cấp III)</td><td>0.0 kN</td><td>Cao độ z=3.5m</td></tr>
     </table>
@@ -1289,7 +1289,7 @@
 
     <h3>1. KIỂM TOÁN XÀ MŨ TRỤ CẦU (PIER CAP)</h3>
     <div class="card">
-        • Kích thước: Bề rộng bxm = 2.5m, Chiều cao ngàm H_root = 2.2m, Chiều dài cánh hẫng L_cant = 7m | Loại: <strong>Xà Mũ Bê Tông Cốt Thép Thường (RC)</strong><br>
+        • Kích thước: Bề rộng bxm = 2.5m, Chiều cao ngàm H_root = 2.2m, Chiều dài cánh hẫng L_cant = 7.0m | Loại: <strong>Xà Mũ Bê Tông Cốt Thép Thường (RC)</strong><br>
         • Mô men uốn tính toán ULS: <strong>Mu = 69172.1 kNm</strong> ≤ Sức kháng uốn: <strong>Mr = 99054.9 kNm</strong> ➔ <strong class="pass">ĐẠT</strong><br>
         • Lực cắt tính toán ULS: <strong>Vu = 15441.4 kN</strong> ≤ Sức kháng cắt: <strong>Vr = 25199.3 kN</strong> ➔ <strong class="pass">ĐẠT</strong>
     </div>
@@ -1307,7 +1307,7 @@
 
     <h3>3. KIỂM TOÁN BỆ TRỤ (FOOTING)</h3>
     <div class="card">
-        • Kích thước đài bệ: Bbe = 6m (dọc) × Cbe = 11.4m (ngang) × Hbe = 2m (cao)<br>
+        • Kích thước đài bệ: Bbe = 6.0m (dọc) × Cbe = 11.4m (ngang) × Hbe = 2.0m (cao)<br>
         • Sức kháng uốn phương X (dọc cầu): <strong>Mux = 38147.4 kNm</strong> ≤ <strong>Mrx = 39164.1 kNm</strong> ➔ <strong class="pass">ĐẠT</strong><br>
         • Sức kháng uốn phương Y (ngang cầu): <strong>Muy = 37217.0 kNm</strong> ≤ <strong>Mry = 20612.7 kNm</strong> ➔ <strong class="fail">KHÔNG ĐẠT</strong><br>
         • Sức kháng cắt dầm 1 phương: <strong>Vu = 37217.0 kN</strong> ≤ <strong>Vr = 20041.2 kN</strong> ➔ <strong class="fail">KHÔNG ĐẠT</strong><br>

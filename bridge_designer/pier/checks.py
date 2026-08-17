@@ -208,15 +208,29 @@ def check_pier_stem(
     Vu_max = 0.0
     Ms_max = 0.0
 
+    # Độ cứng xà mũ và thân trụ cho phân phối khung 2 thân
+    s_twin = getattr(model, "spacing_twin_columns", 4.0)
+    I_beam_xm = (model.bxm * (model.hxm ** 3) / 12.0) if model.pier_column_type == "TWIN" else 1.0
+    k_rel = (I_beam_xm / max(0.1, s_twin)) / (Ig_x / max(0.1, model.Hth)) if model.pier_column_type == "TWIN" else 1.0
+
     for comb in stem_combinations:
         if comb.limit_state_group == "STRENGTH":
             if model.pier_column_type == "TWIN":
-                s_twin = model.spacing_twin_columns
-                N_i = comb.N / 2.0 + abs(comb.Mx) / s_twin
-                # Mô men cục bộ mỗi thân:
-                Mxi_mag = delta_b_x * (abs(comb.Mx) * 0.15) # Tỷ phần uốn cục bộ khung
+                # Phân phối nội lực khung 2 thân theo cơ học kết cấu (Portal Frame Subframe Distribution):
+                # 1. Ngoài mặt phẳng (Uốn quanh X -> My dọc cầu): 2 thân chịu đều
                 Myi_mag = delta_b_y * (abs(comb.My) / 2.0)
-                Vu_i = math.sqrt(comb.Hx ** 2 + comb.Hy ** 2) / 2.0
+                # 2. Trong mặt phẳng (Uốn quanh Y -> Mx ngang cầu và Hx):
+                # Mô men uốn cục bộ chân cột do cắt khung: M_local = (Hx * H / 4) * (3*k_rel+1)/(6*k_rel+1)
+                # Hoặc tỷ phần do chuyển vị xoay nút khung
+                M_local_est = (abs(comb.Hx) * model.Hth / 4.0) * ((3.0 * k_rel + 1.0) / (6.0 * k_rel + 1.0))
+                # Khống chế không vượt quá 50% mô men tổng
+                M_local_col = min(abs(comb.Mx) * 0.5, max(0.0, M_local_est))
+                M_couple = abs(comb.Mx) - 2.0 * M_local_col
+                Delta_N = M_couple / s_twin
+
+                N_i = comb.N / 2.0 + Delta_N
+                Mxi_mag = delta_b_x * M_local_col
+                Vu_i = math.sqrt((comb.Hx / 2.0) ** 2 + (comb.Hy / 2.0) ** 2)
             else:
                 N_i = comb.N
                 Mxi_mag = delta_b_x * abs(comb.Mx)

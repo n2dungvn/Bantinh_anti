@@ -1697,11 +1697,11 @@
                             </div>
                             <div class="flex justify-between p-2 rounded bg-slate-50 border border-slate-200">
                                 <span>4a. Bệ mố Mũi bệ (Toe):</span>
-                                <span :class="calcResult.summary.footing_front.pass ? 'text-emerald-700 font-bold' : 'text-rose-700 font-bold'" x-text="calcResult.summary.footing_front.pass ? 'ĐẠT (Mr=' + calcResult.summary.footing_front.Mr.toFixed(0) + ' kNm)' : 'KHÔNG ĐẠT'"></span>
+                                <span :class="calcResult.summary.footing_front.pass ? 'text-emerald-700 font-bold' : 'text-rose-700 font-bold'" x-text="'Mr=' + calcResult.summary.footing_front.Mr.toFixed(0) + ' / Mu=' + calcResult.summary.footing_front.Mu.toFixed(0) + ' (' + (calcResult.summary.footing_front.pass ? 'ĐẠT' : 'KHÔNG ĐẠT') + ')'"></span>
                             </div>
                             <div class="flex justify-between p-2 rounded bg-slate-50 border border-slate-200">
                                 <span>4b. Bệ mố Gót bệ (Heel):</span>
-                                <span :class="calcResult.summary.footing_rear.pass ? 'text-emerald-700 font-bold' : 'text-rose-700 font-bold'" x-text="calcResult.summary.footing_rear.pass ? 'ĐẠT (Mr=' + calcResult.summary.footing_rear.Mr.toFixed(0) + ' kNm)' : 'KHÔNG ĐẠT'"></span>
+                                <span :class="calcResult.summary.footing_rear.pass ? 'text-emerald-700 font-bold' : 'text-rose-700 font-bold'" x-text="'Mr=' + calcResult.summary.footing_rear.Mr.toFixed(0) + ' / Mu=' + calcResult.summary.footing_rear.Mu.toFixed(0) + ' (' + (calcResult.summary.footing_rear.pass ? 'ĐẠT' : 'KHÔNG ĐẠT') + ')'"></span>
                             </div>
                             <div class="flex justify-between p-2 rounded bg-slate-50 border border-slate-200">
                                 <span>5a. Cọc - TTGH Cường độ (ULS):</span>
@@ -1730,7 +1730,7 @@
                             </div>
                             <div class="flex justify-between p-2 rounded bg-slate-50 border border-slate-200">
                                 <span>3. Bệ trụ (2 phương):</span>
-                                <span :class="calcResult.summary.footing_flexure.pass ? 'text-emerald-700 font-bold' : 'text-rose-700 font-bold'" x-text="calcResult.summary.footing_flexure.pass ? 'ĐẠT' : 'KHÔNG ĐẠT'"></span>
+                                <span :class="calcResult.summary.footing_flexure.pass ? 'text-emerald-700 font-bold' : 'text-rose-700 font-bold'" x-text="'Mr=' + calcResult.summary.footing_flexure.Mr.toFixed(0) + ' / Mu=' + calcResult.summary.footing_flexure.Muy.toFixed(0) + ' (' + (calcResult.summary.footing_flexure.pass ? 'ĐẠT' : 'KHÔNG ĐẠT') + ')'"></span>
                             </div>
                             <div class="flex justify-between p-2 rounded bg-slate-50 border border-slate-200">
                                 <span>4a. Cọc - TTGH Cường độ (ULS):</span>

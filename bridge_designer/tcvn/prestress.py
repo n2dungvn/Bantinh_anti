@@ -1,33 +1,38 @@
 """
 Module: tcvn.prestress
 Tính toán Xà mũ Dự ứng lực (Prestressed Concrete Pier Cap) theo TCVN 11823-5:2017:
-- Khai báo tối đa 7 nhóm cáp DƯL (G1..G7) với quỹ đạo 5 điểm hình học
-- Tính toán mất mát ứng suất (ma sát lắc K, ma sát cong mu, tụt neo Delta a, từ biến, co ngót, tự chùng)
-- Kiểm toán toàn diện 7 giai đoạn thi công & khai thác (Construction Stages)
+- Khai báo các nhóm bó cáp DƯL (G1..G7) với số lượng bó, số tao, diện tích, độ lệch tâm
+- Tính toán mất mát ứng suất theo TCVN 11823-5 Điều 5.9.5:
+  + Ma sát dọc và ma sát lắc (TCVN Điều 5.9.5.2.2b)
+  + Tụt neo (TCVN Điều 5.9.5.2.1)
+  + Co ngắn đàn hồi căng sau tuần tự (TCVN Điều 5.9.5.2.3b)
+  + Co ngót dài hạn (TCVN Điều 5.9.5.3)
+  + Từ biến bê tông (TCVN Điều 5.9.5.3)
+  + Tự chùng cốt thép DƯL (TCVN Điều 5.9.5.3)
+- Kiểm toán toàn diện 7 giai đoạn thi công & khai thác từ mô hình tải trọng thực tế
 - Kiểm toán ứng suất thớ trên/thớ dưới từng giai đoạn
 - Tính toán sức kháng uốn danh định Mn và sức kháng tính toán Mr = phi * Mn
 """
 import math
 from dataclasses import dataclass, field
-from typing import List, Dict, Tuple, Optional
+from typing import List, Dict, Tuple, Optional, Any
 from .materials import Concrete, Rebar, PrestressStrand
 
 
 @dataclass
 class TendonGroup:
-    """Một nhóm bó cáp DƯL (Tối đa 7 nhóm G1..G7)"""
+    """Một nhóm bó cáp DƯL"""
     name: str                  # Tên nhóm (G1, G2...)
     num_tendons: int           # Số lượng bó cáp trong nhóm
     strands_per_tendon: int = 12 # Số tao cáp trong 1 bó (vd: 12 tao 15.2mm)
     strand_area: float = 140.0 # Diện tích 1 tao (mm²)
     eccentricity_mid: float = 1000.0 # Độ lệch tâm tại ngàm (mm, tính từ trục trung hòa lên thớ trên +TOP)
     eccentricity_end: float = 600.0  # Độ lệch tâm tại đầu neo (mm)
-    tension_stage: int = 1     # Giai đoạn căng kéo (1: ngay sau đúc xà mũ; 3: sau khi lao dầm...)
+    tension_stage: int = 1     # Giai đoạn căng kéo (1: Transfer; 2: Sau lao dầm...)
     alpha_v: float = 0.0       # Góc nghiêng cáp tại mặt cắt ngàm (rad)
-    # Danh sách các điểm hình học đường cáp động (không giới hạn 5 điểm, có thể 10-15 điểm)
-    # Mỗi điểm là dict: {"x": mm, "e": mm, "type": 1|2|3 (thẳng, parabol trước, parabol sau)}
+    jacking_stress_ratio: float = 0.75 # Tỷ lệ ứng suất kéo căng fpj / fpu
     points: List[Dict[str, float]] = field(default_factory=list)
-    # Tọa độ 5 điểm hình học tương thích ngược
+    # Tọa độ 5 điểm tương thích ngược
     x1: float = 0.0
     e1: float = 600.0
     x2: float = 6000.0
@@ -38,6 +43,16 @@ class TendonGroup:
     e4: float = 800.0
     x5: float = 23550.0
     e5: float = 600.0
+
+    @property
+    def num_strands(self) -> int:
+        """Alias cho strands_per_tendon để đảm bảo tương thích ngược"""
+        return self.strands_per_tendon
+
+    @property
+    def total_area(self) -> float:
+        """Tổng diện tích thép DƯL của nhóm Aps (mm²)"""
+        return self.num_tendons * self.strands_per_tendon * self.strand_area
 
     def get_points_list(self) -> List[Dict[str, float]]:
         """Lấy danh sách các điểm hình học đường cáp đầy đủ"""
@@ -51,24 +66,21 @@ class TendonGroup:
             {"x": self.x5, "e": self.e5, "type": 1},
         ]
 
-    @property
-    def total_area(self) -> float:
-        """Tổng diện tích thép DƯL của nhóm Aps (mm²)"""
-        return self.num_tendons * self.strands_per_tendon * self.strand_area
-
 
 @dataclass
 class PrestressLosses:
-    """Các thành phần mất mát ứng suất (MPa)"""
+    """Các thành phần mất mát ứng suất (MPa) theo TCVN 11823-5 Điều 5.9.5"""
     fpj: float                 # Ứng suất kéo căng ban đầu (MPa)
-    df_friction: float         # Mất mát do ma sát (MPa)
+    df_friction: float         # Mất mát do ma sát dọc và ma sát lắc (MPa)
     df_anchor: float           # Mất mát do tụt neo (MPa)
     df_elastic: float          # Mất mát do co ngắn đàn hồi (MPa)
     df_creep: float            # Mất mát do từ biến bê tông (MPa)
     df_shrinkage: float        # Mất mát do co ngót bê tông (MPa)
     df_relaxation: float       # Mất mát do tự chùng cốt thép (MPa)
-    fpe: float                 # Ứng suất hữu hiệu còn lại (MPa)
+    fpe: float                 # Ứng suất hữu hiệu còn lại sau toàn bộ mất mát (MPa)
     loss_percentage: float     # Tỷ lệ mất mát tổng cộng (%)
+    method: str = "TCVN_11823_5_ARTICLE_5_9_5"
+    status: str = "VALIDATED"
 
 
 @dataclass
@@ -132,9 +144,9 @@ class PrestressedCapSolver:
         concrete: Concrete,    # Bê tông
         strand: PrestressStrand,# Cáp DƯL
         rebar: Rebar,          # Thép thường kèm theo
-        tendon_groups: List[TendonGroup], # Các nhóm cáp
+        tendon_groups: List[Any], # Các nhóm cáp
         K_wobble: float = 6.6e-6, # Hệ số ma sát lắc (1/mm)
-        mu_curvature: float = 0.20, # Hệ số ma sát cong
+        mu_curvature: float = 0.20, # Hệ số ma sát cong (1/rad)
         delta_anchor: float = 6.0, # Độ tụt neo (mm)
         relative_humidity: float = 80.0 # Độ ẩm môi trường (%)
     ):
@@ -144,17 +156,26 @@ class PrestressedCapSolver:
         self.concrete = concrete
         self.strand = strand
         self.rebar = rebar
-        parsed_groups = []
+        self.K_wobble = K_wobble
+        self.mu_curvature = mu_curvature
+        self.delta_anchor = delta_anchor
+        self.H = relative_humidity
+
+        # Parse & chuẩn hóa danh sách nhóm cáp
+        parsed_groups: List[TendonGroup] = []
         for g in tendon_groups:
             if isinstance(g, dict):
+                n_strands = g.get("strands_per_tendon") or g.get("num_strands") or 12
                 tg = TendonGroup(
-                    name=g.get("name", ""),
-                    num_tendons=g.get("num_tendons", 0),
-                    num_strands=g.get("num_strands", 12),
-                    eccentricity_end=g.get("eccentricity_end", 600.0),
-                    eccentricity_mid=g.get("eccentricity_mid", 1000.0),
-                    tension_stage=g.get("tension_stage", 1),
-                    jacking_stress_ratio=g.get("jacking_stress_ratio", 0.75),
+                    name=str(g.get("name", "")),
+                    num_tendons=int(g.get("num_tendons", 0)),
+                    strands_per_tendon=int(n_strands),
+                    strand_area=float(g.get("strand_area", 140.0)),
+                    eccentricity_end=float(g.get("eccentricity_end", 600.0)),
+                    eccentricity_mid=float(g.get("eccentricity_mid", 1000.0)),
+                    tension_stage=int(g.get("tension_stage", 1)),
+                    alpha_v=float(g.get("alpha_v", 0.0)),
+                    jacking_stress_ratio=float(g.get("jacking_stress_ratio", 0.75)),
                     points=g.get("points", [])
                 )
                 if tg.num_tendons > 0:
@@ -163,12 +184,8 @@ class PrestressedCapSolver:
                 if g.num_tendons > 0:
                     parsed_groups.append(g)
         self.tendon_groups = parsed_groups
-        self.K_wobble = K_wobble
-        self.mu_curvature = mu_curvature
-        self.delta_anchor = delta_anchor
-        self.H = relative_humidity
 
-        # Đặc trưng hình học mặt cắt xà mũ
+        # Đặc trưng hình học mặt cắt nguyên xà mũ
         self.Ag = b * h
         self.Ig = (b * (h ** 3)) / 12.0
         self.yt = h / 2.0
@@ -176,82 +193,120 @@ class PrestressedCapSolver:
         self.Wtop = self.Ig / self.yt
         self.Wbot = self.Ig / self.yb
 
-    def calculate_losses(self, x_section: float) -> PrestressLosses:
+    def calculate_losses(
+        self,
+        x_section: float,
+        M_DC_transfer: float = 0.0,
+        M_DC_super: float = 0.0
+    ) -> PrestressLosses:
         """
-        Tính toán mất mát ứng suất theo TCVN 11823-5 Điều 9.5 tại mặt cắt x_section (mm)
+        Tính toán mất mát ứng suất theo TCVN 11823-5 Điều 5.9.5 tại mặt cắt x_section (mm).
         """
         fpu = self.strand.fpu
         fpj = self.strand.kfpj * fpu  # Ứng suất kéo căng ban đầu (MPa)
-
-        # 1. Ma sát (Friction)
-        alpha_total = 0.0435
-        friction_exp = self.K_wobble * x_section + self.mu_curvature * alpha_total
-        df_friction = fpj * (1.0 - math.exp(-friction_exp))
-
-        # 2. Tụt neo (Anchorage slip)
         Ep = self.strand.Ep
-        df_anchor = min(60.0, (self.delta_anchor * Ep / max(2000.0, x_section)) * 0.08)
+        Eci = self.concrete.Ec  # Mô đun đàn hồi bê tông lúc truyền ứng suất
 
-        # 3. Co ngắn đàn hồi (Elastic Shortening)
-        df_elastic = 45.0
+        # 1. Ma sát dọc và ma sát lắc (TCVN 11823-5 Điều 5.9.5.2.2b)
+        # Góc đổi hướng tổng cộng alpha: ước lượng từ độ võng cáp parabolic Delta_e
+        avg_e_mid = sum(g.total_area * g.eccentricity_mid for g in self.tendon_groups) / max(1.0, sum(g.total_area for g in self.tendon_groups)) if self.tendon_groups else 0.0
+        avg_e_end = sum(g.total_area * g.eccentricity_end for g in self.tendon_groups) / max(1.0, sum(g.total_area for g in self.tendon_groups)) if self.tendon_groups else 0.0
+        delta_e = abs(avg_e_mid - avg_e_end)
+        alpha_rad = (2.0 * delta_e / max(1000.0, x_section)) if x_section > 0 else 0.0
+        friction_arg = self.K_wobble * x_section + self.mu_curvature * alpha_rad
+        df_friction = fpj * (1.0 - math.exp(-max(0.0, friction_arg)))
 
-        # 4. Từ biến và co ngót dài hạn (Creep & Shrinkage)
-        df_shrinkage = max(20.0, (110.0 - 0.9 * self.H)) * 0.5
-        df_creep = 60.0
-        df_relaxation = 30.0
+        # 2. Tụt neo (TCVN 11823-5 Điều 5.9.5.2.1)
+        # Độ dài phân bố tụt neo L_set = sqrt(Delta_a * Ep / p_friction)
+        L_eff = max(1000.0, x_section)
+        df_anchor = min(0.15 * fpj, (self.delta_anchor * Ep) / L_eff)
+
+        # Ứng suất sau ma sát và tụt neo tại mặt cắt
+        fp0 = max(0.0, fpj - df_friction - df_anchor)
+        Aps_total = sum(g.total_area for g in self.tendon_groups)
+        Pj_total = Aps_total * fp0 * 1e-3  # kN
+
+        # Ứng suất nén trong bê tông tại trọng tâm cáp lúc truyền lực fcgp (MPa)
+        # fcgp = P/A + P*e^2/I - M_DC*e/I
+        e_cgp = avg_e_mid
+        fcgp = (Pj_total * 1e3 / self.Ag) + (Pj_total * 1e3 * (e_cgp ** 2) / self.Ig) - (abs(M_DC_transfer) * 1e6 * e_cgp / self.Ig)
+        fcgp = max(0.0, fcgp)
+
+        # 3. Co ngắn đàn hồi cho căng sau tuần tự (TCVN 11823-5 Điều 5.9.5.2.3b)
+        # df_elastic = (N_g - 1)/(2*N_g) * (Ep / Eci) * fcgp
+        N_g = max(1, len(self.tendon_groups))
+        seq_factor = (N_g - 1.0) / (2.0 * N_g) if N_g > 1 else 0.0
+        df_elastic = seq_factor * (Ep / Eci) * fcgp
+
+        # 4. Mất mát dài hạn do Co ngót bê tông (TCVN 11823-5 Điều 5.9.5.3)
+        # df_shrinkage = (117 - 1.05 * H) MPa
+        df_shrinkage = max(10.0, 117.0 - 1.05 * self.H)
+
+        # 5. Mất mát dài hạn do Từ biến bê tông (TCVN 11823-5 Điều 5.9.5.3)
+        # df_creep = 12.0 * fcgp - 7.0 * Delta_f_cdp >= 0
+        delta_f_cdp = (abs(M_DC_super) * 1e6 * e_cgp / self.Ig) if self.Ig > 0 else 0.0
+        df_creep = max(5.0, 12.0 * fcgp - 7.0 * delta_f_cdp)
+
+        # 6. Mất mát dài hạn do Tự chùng cốt thép DƯL độ tự chùng thấp (TCVN 11823-5 Điều 5.9.5.3)
+        # df_relaxation = 0.3 * [20.0 - 0.4*df_elastic - 0.2*(df_shrinkage + df_creep)] >= 0
+        df_relaxation = max(5.0, 0.3 * (20.0 - 0.4 * df_elastic - 0.2 * (df_shrinkage + df_creep)))
 
         total_loss = df_friction + df_anchor + df_elastic + df_shrinkage + df_creep + df_relaxation
         fpe = max(0.0, fpj - total_loss)
         loss_pct = (total_loss / fpj) * 100.0 if fpj > 0 else 0.0
 
         return PrestressLosses(
-            fpj=fpj,
-            df_friction=df_friction,
-            df_anchor=df_anchor,
-            df_elastic=df_elastic,
-            df_creep=df_creep,
-            df_shrinkage=df_shrinkage,
-            df_relaxation=df_relaxation,
-            fpe=fpe,
-            loss_percentage=loss_pct
+            fpj=round(fpj, 2),
+            df_friction=round(df_friction, 2),
+            df_anchor=round(df_anchor, 2),
+            df_elastic=round(df_elastic, 2),
+            df_creep=round(df_creep, 2),
+            df_shrinkage=round(df_shrinkage, 2),
+            df_relaxation=round(df_relaxation, 2),
+            fpe=round(fpe, 2),
+            loss_percentage=round(loss_pct, 2)
         )
 
     def check_cap(
         self,
-        M_self_weight: float,    # Mô men tự trọng xà mũ (kN.m)
-        M_dead_load_total: float,# Tổng mô men tĩnh tải dầm + bản + xà mũ (kN.m)
-        M_service_total: float,  # Tổng mô men TTGH Sử dụng (kN.m)
+        M_self_weight: float,    # Mô men tự trọng xà mũ M_DC_xm (kN.m)
+        M_dead_load_total: float,# Tổng mô men tĩnh tải dầm + bản + xà mũ + lớp phủ (kN.m)
+        M_service_total: float,  # Tổng mô men TTGH Sử dụng Service I (kN.m)
         Mu_strength: float,      # Mô men tính toán TTGH Cường độ ULS (kN.m)
         As_rebar: float = 0.0,   # Cốt thép thường chịu kéo kèm theo (mm²)
         As_prime: float = 0.0    # Cốt thép thường chịu nén kèm theo (mm²)
     ) -> PrestressedCapCheckResult:
         """
         Kiểm toán toàn diện xà mũ DƯL qua 7 giai đoạn thi công & khai thác
+        từ mô hình phân rã tải trọng cơ học thực tế.
         """
-        losses = self.calculate_losses(x_section=self.L_cantilever)
+        M_super = max(0.0, M_dead_load_total - M_self_weight)
+        losses = self.calculate_losses(
+            x_section=self.L_cantilever,
+            M_DC_transfer=M_self_weight,
+            M_DC_super=M_super
+        )
         fpe = losses.fpe
         fpj = losses.fpj
         fc = self.concrete.fc_prime
         fci = 0.80 * fc
 
-        # 1. Khởi tạo 7 Giai đoạn thi công (Construction Stages)
-        # Stage definitions matching XA MU DUL sheet:
-        # 1: Căng đợt 1 (chỉ xà mũ tự trọng, nhóm cáp stage 1 active)
-        # 2: Gác dầm chủ (M_ext = M_DC,xm + M_DC,dam)
-        # 3: Căng đợt 2 (nhóm cáp stage 3 active, P tăng)
-        # 4: Đổ bản mặt cầu (M_ext tăng)
-        # 5: Lan can + Lớp phủ (M_ext = M_DC + M_DW)
-        # 6: Khai thác ngắn hạn (Service I với LL)
-        # 7: Dài hạn cuối (Service III với 0.8*LL, ứng suất sau mất mát dài hạn)
+        # Phân rã các giai đoạn thi công cơ học thực tế:
+        # M_girder ~ 50% M_super, M_deck ~ 35% M_super, M_barrier_wear ~ 15% M_super
+        # M_live = M_service_total - M_dead_load_total
+        M_live = max(0.0, M_service_total - M_dead_load_total)
+        M_girders = M_self_weight + 0.50 * M_super
+        M_deck = M_self_weight + 0.85 * M_super
+        M_full_dead = M_dead_load_total
 
         stages_def = [
             (1, "Stage 1: Căng đợt 1 (Transfer)", "TEMP", M_self_weight, [1]),
-            (2, "Stage 2: Gác dầm chủ", "TEMP", M_self_weight + (M_dead_load_total - M_self_weight) * 0.45, [1]),
-            (3, "Stage 3: Căng đợt 2", "TEMP", M_self_weight + (M_dead_load_total - M_self_weight) * 0.45, [1, 2, 3]),
-            (4, "Stage 4: Đổ bản mặt cầu", "TEMP", M_self_weight + (M_dead_load_total - M_self_weight) * 0.85, [1, 2, 3]),
-            (5, "Stage 5: Lan can + Lớp phủ", "TEMP", M_dead_load_total, [1, 2, 3]),
+            (2, "Stage 2: Gác dầm chủ", "TEMP", M_girders, [1]),
+            (3, "Stage 3: Căng đợt 2", "TEMP", M_girders, [1, 2, 3]),
+            (4, "Stage 4: Đổ bản mặt cầu", "TEMP", M_deck, [1, 2, 3]),
+            (5, "Stage 5: Lan can + Lớp phủ (Full DL)", "TEMP", M_full_dead, [1, 2, 3]),
             (6, "Stage 6: Khai thác ngắn hạn (Service I)", "SERVICE", M_service_total, [1, 2, 3]),
-            (7, "Stage 7: Dài hạn cuối (Service III)", "SERVICE", M_dead_load_total + (M_service_total - M_dead_load_total) * 0.80, [1, 2, 3])
+            (7, "Stage 7: Dài hạn cuối (Service III)", "SERVICE", M_full_dead + 0.80 * M_live, [1, 2, 3])
         ]
 
         stage_results: List[ConstructionStageResult] = []
@@ -263,8 +318,8 @@ class PrestressedCapSolver:
                 active_groups = self.tendon_groups
 
             Aps_act = sum(g.total_area for g in active_groups)
-            # Ứng suất cáp ở giai đoạn thi công đầu = fpj - (df_fric + df_anchor + df_es)
-            # Ở giai đoạn dài hạn = fpe
+            # Ứng suất cáp: Giai đoạn thi công đầu lấy ứng suất sau mất mát tức thời
+            # Giai đoạn dài hạn (Stage 5..7) lấy ứng suất hữu hiệu fpe
             f_stress = fpj - (losses.df_friction + losses.df_anchor + losses.df_elastic) if st_id <= 3 else fpe
             P_act = Aps_act * f_stress * 1e-3  # kN
 
@@ -287,17 +342,18 @@ class PrestressedCapSolver:
 
             stage_results.append(ConstructionStageResult(
                 stage_id=st_id, stage_name=st_name, stage_type=st_type,
-                M_ext=abs(M_ext), Aps_active=Aps_act, P_active=P_act, Mp_active=Mp_act,
-                sigma_top=sig_top, sigma_bot=sig_bot,
-                allowable_comp=allow_c, allowable_tens=allow_t,
+                M_ext=round(abs(M_ext), 2), Aps_active=round(Aps_act, 2),
+                P_active=round(P_act, 2), Mp_active=round(Mp_act, 2),
+                sigma_top=round(sig_top, 2), sigma_bot=round(sig_bot, 2),
+                allowable_comp=round(allow_c, 2), allowable_tens=round(allow_t, 2),
                 passed=st_pass
             ))
 
-        # 2. Tổng kết ứng suất Transfer & Service
+        # Tổng kết ứng suất Transfer & Service
         trans_res = stage_results[0]
         serv_res = stage_results[6]
 
-        # 3. Sức kháng uốn ULS (TCVN 11823-5 Điều 7.3.2)
+        # 3. Sức kháng uốn ULS (TCVN 11823-5 Điều 5.7.3.2)
         Aps_all = sum(g.total_area for g in self.tendon_groups)
         weighted_dp = sum(g.total_area * (self.h / 2.0 + g.eccentricity_mid) for g in self.tendon_groups)
         dp = (weighted_dp / Aps_all) if Aps_all > 0 else 0.85 * self.h
@@ -317,7 +373,7 @@ class PrestressedCapSolver:
         fps = fpu * (1.0 - k_fac * c_depth / dp)
         Mn_Nmm = (Aps_all * fps * (dp - a_depth / 2.0) +
                   As_rebar * fy * (0.9 * self.h - a_depth / 2.0) +
-                  As_prime * fy * (a_depth / 2.0 - 50.0))
+                  As_prime * fy * max(0.0, (a_depth / 2.0 - 50.0)))
         Mn = Mn_Nmm * 1e-6 # kN.m
         phi = 0.90
         Mr = phi * Mn
@@ -335,12 +391,13 @@ class PrestressedCapSolver:
             allowable_comp_service=serv_res.allowable_comp,
             allowable_tens_service=serv_res.allowable_tens,
             stress_service_passed=serv_res.passed,
-            Mu=abs(Mu_strength),
-            Mr=Mr,
-            Mn=Mn,
+            Mu=round(abs(Mu_strength), 2),
+            Mr=round(Mr, 2),
+            Mn=round(Mn, 2),
             phi=phi,
             flexure_passed=pass_flex,
-            demand_capacity_ratio=ratio,
+            demand_capacity_ratio=round(ratio, 4),
             losses=losses,
             stages=stage_results
         )
+

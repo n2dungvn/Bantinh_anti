@@ -43,6 +43,8 @@ class StemCheckSummary:
     rebar_ratio: float         # Hàm lượng cốt thép (%)
     rebar_ratio_passed: bool
     overall_passed: bool
+    method: str = "CONSERVATIVE_FLEXURE_NO_AXIAL_BENEFIT"
+    assumptions: str = "Neglecting beneficial axial compression Pu in stem flexural capacity"
 
 
 @dataclass
@@ -81,6 +83,8 @@ class WingWallCheckSummary:
     crack_bot_fix: CrackControlResult
     shear_bot_fix: ShearCheckResult
     overall_passed: bool
+    method: str = "HILLERBORG_STRIP_METHOD_APPROX"
+    assumptions: str = "Equilibrium strip distribution for cantilever trapezoidal wing walls"
 
 
 @dataclass

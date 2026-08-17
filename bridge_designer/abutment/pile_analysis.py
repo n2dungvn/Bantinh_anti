@@ -135,7 +135,8 @@ def analyze_abutment_piles(
             cap_res = SCTCalculator.calculate(pile_inp)
             p_allow_str = cap_res.strength.governing_kn
             p_allow_ext = cap_res.extreme.governing_kn
-            p_allow_ser = cap_res.extreme.governing_kn  # Ở TTGH Sử dụng, hệ số sức kháng phi = 1.0 (TCVN 11823-10 Điều 10.5.5.1)
+            # TTGH Sử dụng: Sức chịu tải cho phép theo hệ số an toàn FS = 2.0 đối với sức kháng danh định
+            p_allow_ser = (cap_res.qshaft_nominal_kn + cap_res.qtip_nominal_kn) / 2.0
             p_allow_up = cap_res.strength.uplift_single_magnitude_kn
         except Exception as err:
             print(f"Lỗi tính toán TS-CAP: {err}")
