@@ -1,0 +1,1494 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phần Mềm Tính Toán Kết Cấu Mố & Trụ Cầu TCVN 11823:2017</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Alpine.js -->
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <style>
+        [x-cloak] { display: none !important; }
+        .tab-btn.active { border-bottom: 3px solid #2563eb; color: #1d4ed8; font-weight: 700; background: #ffffff; }
+        input:focus, select:focus { border-color: #2563eb !important; outline: none !important; ring: 2px solid #93c5fd !important; }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #f1f5f9; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+    </style>
+</head>
+<body class="bg-slate-100 text-slate-800 antialiased font-sans" x-data="bridgeApp()" x-init="initApp()" x-cloak>
+
+    <!-- TOP HEADER NAVBAR -->
+    <header class="bg-blue-950 text-white shadow-lg sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 py-2.5 flex flex-wrap items-center justify-between gap-3">
+            <div class="flex items-center gap-3">
+                <div class="bg-blue-600 px-3 py-1.5 rounded-lg text-white font-black text-lg tracking-wider shadow">🌉 PYBRIDGE</div>
+                <div>
+                    <h1 class="text-base font-bold leading-tight flex items-center gap-2">
+                        PHẦN MỀM TÍNH TOÁN KẾT CẤU MỐ & TRỤ CẦU
+                        <span class="bg-blue-800 text-blue-200 text-[10px] px-2 py-0.5 rounded font-mono">v3.3 Professional</span>
+                    </h1>
+                    <p class="text-xs text-blue-300">Tiêu chuẩn Việt Nam TCVN 11823:2017 (AASHTO LRFD)</p>
+                </div>
+            </div>
+
+            <!-- MODULE SELECTOR -->
+            <div class="flex bg-blue-900/80 p-1 rounded-lg border border-blue-700 shadow-inner">
+                <button @click="switchModule('abutment')" :class="currentModule === 'abutment' ? 'bg-blue-600 text-white shadow font-bold' : 'text-blue-200 hover:text-white'" class="px-4 py-1.5 rounded-md text-xs transition flex items-center gap-1.5">
+                    <span>🏗️</span> MỐ CẦU (Abutment)
+                </button>
+                <button @click="switchModule('pier')" :class="currentModule === 'pier' ? 'bg-blue-600 text-white shadow font-bold' : 'text-blue-200 hover:text-white'" class="px-4 py-1.5 rounded-md text-xs transition flex items-center gap-1.5">
+                    <span>🏛️</span> TRỤ CẦU (Pier)
+                </button>
+            </div>
+
+            <!-- ACTION BUTTONS -->
+            <div class="flex items-center gap-2">
+                <button @click="runCalculation()" :disabled="isLoading" class="bg-emerald-600 hover:bg-emerald-500 text-white px-5 py-2 rounded-lg font-black text-xs shadow-md flex items-center gap-2 transition active:scale-95">
+                    <span x-show="!isLoading">⚡ TÍNH TOÁN TOÀN BỘ</span>
+                    <span x-show="isLoading">⏳ Đang tính toán...</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- PRESET & FILE ACTIONS TOOLBAR -->
+    <div class="bg-white border-b border-slate-200 shadow-sm py-2 px-4">
+        <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-3 text-xs">
+            <div class="flex items-center gap-2">
+                <span class="font-bold text-slate-500 uppercase tracking-wider">Nạp Mẫu Đối Chuẩn:</span>
+                <template x-if="currentModule === 'abutment'">
+                    <button @click="loadPreset('default_abutment')" class="bg-blue-50 hover:bg-blue-100 text-blue-700 px-3 py-1 rounded border border-blue-200 font-bold">
+                        📂 Mố Chữ U (A1 Km19+000)
+                    </button>
+                </template>
+                <template x-if="currentModule === 'pier'">
+                    <div class="flex items-center gap-2">
+                        <button @click="loadPreset('default_pier_rc')" class="bg-blue-50 hover:bg-blue-100 text-blue-700 px-3 py-1 rounded border border-blue-200 font-bold">
+                            📂 Trụ 1 Thân (Xà mũ RC)
+                        </button>
+                        <button @click="loadPreset('default_pier_pt')" class="bg-purple-50 hover:bg-purple-100 text-purple-700 px-3 py-1 rounded border border-purple-200 font-bold">
+                            📂 Trụ 1 Thân (Xà mũ DƯL PT - 7 Giai Đoạn)
+                        </button>
+                        <button @click="loadPreset('default_pier_twin')" class="bg-emerald-50 hover:bg-emerald-100 text-emerald-700 px-3 py-1 rounded border border-emerald-200 font-bold">
+                            📂 Trụ 2 Thân (Twin Pier)
+                        </button>
+                    </div>
+                </template>
+            </div>
+
+            <div class="flex items-center gap-2">
+                <label class="cursor-pointer bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-1 rounded border border-slate-300 font-medium">
+                    📥 Mở File JSON
+                    <input type="file" @change="importJSON($event)" accept=".json" class="hidden">
+                </label>
+                <button @click="exportJSON()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-1 rounded border border-slate-300 font-medium">
+                    💾 Lưu File JSON
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MAIN TWO-COLUMN WORKSPACE -->
+    <main class="max-w-7xl mx-auto px-4 py-5 grid grid-cols-1 lg:grid-cols-12 gap-5">
+
+        <!-- LEFT COLUMN: SCHEMATIC VISUALIZER + TABBED DETAILED INPUTS (7 COLS) -->
+        <section class="lg:col-span-7 flex flex-col gap-4">
+
+            <!-- 1. INTERACTIVE ENGINEERING SCHEMATIC VIEWER -->
+            <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4">
+                <div class="flex flex-wrap items-center justify-between gap-2 mb-2">
+                    <div class="flex items-center gap-2">
+                        <span class="text-blue-700 font-black text-xs uppercase tracking-wide">📐 HÌNH MINH HỌA HÌNH HỌC TRỰC QUAN ĐỘNG</span>
+                    </div>
+
+                    <!-- DIAGRAM VIEW SELECTOR -->
+                    <div class="flex bg-slate-100 p-0.5 rounded-lg border border-slate-200 text-[11px] overflow-x-auto">
+                        <button @click="svgView = 'elevation'" :class="svgView === 'elevation' ? 'bg-blue-600 text-white font-bold' : 'text-slate-600'" class="px-2.5 py-1 rounded transition whitespace-nowrap">
+                            Trắc dọc kết cấu
+                        </button>
+                        <template x-if="currentModule === 'abutment'">
+                            <button @click="svgView = 'wing_wall'" :class="svgView === 'wing_wall' ? 'bg-amber-600 text-white font-bold' : 'text-slate-600'" class="px-2.5 py-1 rounded transition whitespace-nowrap">
+                                Chi tiết tường cánh
+                            </button>
+                        </template>
+                        <button @click="svgView = 'skew_plan'" :class="svgView === 'skew_plan' ? 'bg-blue-600 text-white font-bold' : 'text-slate-600'" class="px-2.5 py-1 rounded transition whitespace-nowrap">
+                            Mặt bằng bệ chéo α & Cọc
+                        </button>
+                        <template x-if="currentModule === 'pier' && formData.cap_type === 'PT'">
+                            <button @click="svgView = 'tendons'" :class="svgView === 'tendons' ? 'bg-purple-600 text-white font-bold' : 'text-slate-600'" class="px-2.5 py-1 rounded transition whitespace-nowrap">
+                                Cáp DƯL G1..G7
+                            </button>
+                        </template>
+                    </div>
+                </div>
+
+                <!-- SVG CANVAS CONTAINER -->
+                <div class="bg-slate-50 border border-slate-200 rounded-lg p-2 flex justify-center items-center overflow-hidden min-h-[320px]">
+                    
+                    <!-- VIEW 1: TRẮC DỌC KẾT CẤU (LONGITUDINAL ELEVATION) -->
+                    <div x-show="svgView === 'elevation'" class="w-full">
+                        <template x-if="currentModule === 'abutment'">
+                            <svg width="520" height="310" viewBox="0 0 520 310" class="w-full h-auto max-h-[310px] select-none">
+                                <!-- LĂNG THỂ ĐẤT ĐẮP PHÍA SAU -->
+                                <polygon points="30,50 228,50 228,180 30,180" fill="#fef3c7" stroke="#f59e0b" stroke-dasharray="3,3" />
+                                <text x="60" y="90" fill="#d97706" font-size="9.5" font-weight="bold">Đất đắp (EH, LS)</text>
+
+                                <!-- BIÊN DẠNG TƯỜNG CÁNH CHUẨN XÁC KÍCH THƯỚC THẬT (MÉP CHÂN SAU TRÙNG KHÍT MÉP SAU BỆ MỐ x=120) -->
+                                <polygon points="36,51 280,51 280,180 120,180 120,116 36,74 36,51" fill="#fecdd3" fill-opacity="0.65" stroke="#b91c1c" stroke-width="2.5" stroke-dasharray="4,2" />
+                                <text x="95" y="145" fill="#991b1b" font-size="10" font-weight="bold">Tường cánh mố</text>
+                                <text x="95" y="160" fill="#7f1d1d" font-size="8.5">w1=<tspan x-text="(Number(formData.B2) + Number(formData.B5)).toFixed(1)"></tspan>m | Htc=<tspan x-text="(Number(formData.H2) + Number(formData.H3) + Number(formData.H4)).toFixed(2)"></tspan>m</text>
+
+                                <!-- BỆ MỐ (B1 x H1: từ x=120 đến x=360) -->
+                                <rect x="120" y="180" width="240" height="35" fill="#94a3b8" stroke="#1e293b" stroke-width="2" rx="1" />
+                                <text x="240" y="202" fill="#ffffff" font-size="10" font-weight="bold" text-anchor="middle">
+                                    Bệ mố: B1=<tspan x-text="formData.B1" fill="#fde047"></tspan>m × H1=<tspan x-text="formData.H1" fill="#fde047"></tspan>m
+                                </text>
+
+                                <!-- THÂN MỐ (B3 x H6: từ x=228 đến x=280) -->
+                                <rect x="228" y="75" width="52" height="105" fill="#cbd5e1" stroke="#1e293b" stroke-width="2" />
+                                <text x="254" y="125" fill="#0f172a" font-size="10.5" font-weight="bold" text-anchor="middle">Thân B3=<tspan x-text="formData.B3" fill="#2563eb"></tspan>m</text>
+                                <text x="254" y="140" fill="#475569" font-size="9" text-anchor="middle">H6=<tspan x-text="formData.H6"></tspan>m</text>
+
+                                <!-- TƯỜNG ĐỈNH (B7 x H7) & MẤU ĐỠ BẢN QUÁ ĐỘ -->
+                                <rect x="228" y="50" width="20" height="25" fill="#64748b" stroke="#1e293b" stroke-width="1.5" />
+                                <rect x="210" y="60" width="18" height="15" fill="#475569" stroke="#1e293b" />
+                                <text x="238" y="42" fill="#1e293b" font-size="8.5" font-weight="bold" text-anchor="middle">Đỉnh B7=<tspan x-text="formData.B7"></tspan>m, H7=<tspan x-text="formData.H7"></tspan>m</text>
+
+                                <!-- TIM GỐI KCN -->
+                                <rect x="252" y="67" width="20" height="8" fill="#ef4444" stroke="#991b1b" rx="1" />
+                                <text x="282" y="74" fill="#dc2626" font-size="8" font-weight="bold">Tim gối</text>
+
+                                <!-- ĐƯỜNG GIÓNG KÍCH THƯỚC CHI TIẾT DƯỚI BỆ: GÓT, THÂN, MŨI -->
+                                <!-- 1. Gót bệ (Phía sau thân) -->
+                                <line x1="120" y1="225" x2="228" y2="225" stroke="#1e293b" stroke-width="1.5" />
+                                <line x1="120" y1="220" x2="120" y2="230" stroke="#1e293b" stroke-width="1.5" />
+                                <line x1="228" y1="220" x2="228" y2="230" stroke="#1e293b" stroke-width="1.5" />
+                                <text x="174" y="237" fill="#0f172a" font-size="9" font-weight="bold" text-anchor="middle">
+                                    Gót = <tspan x-text="(formData.B1 - formData.B4 - formData.B3).toFixed(1)"></tspan>m
+                                </text>
+
+                                <!-- 2. Thân B3 -->
+                                <line x1="228" y1="225" x2="280" y2="225" stroke="#2563eb" stroke-width="1.5" />
+                                <line x1="280" y1="220" x2="280" y2="230" stroke="#2563eb" stroke-width="1.5" />
+                                <text x="254" y="237" fill="#2563eb" font-size="9" font-weight="bold" text-anchor="middle">
+                                    B3=<tspan x-text="formData.B3"></tspan>m
+                                </text>
+
+                                <!-- 3. Mũi bệ (Phía trước thân) -->
+                                <line x1="280" y1="225" x2="360" y2="225" stroke="#059669" stroke-width="1.5" />
+                                <line x1="360" y1="220" x2="360" y2="230" stroke="#059669" stroke-width="1.5" />
+                                <text x="320" y="237" fill="#059669" font-size="9" font-weight="bold" text-anchor="middle">
+                                    Mũi B4=<tspan x-text="formData.B4"></tspan>m
+                                </text>
+
+                                <!-- MÓNG CỌC KHOAN NHỒI -->
+                                <g>
+                                    <rect x="165" y="245" width="18" height="55" fill="#334155" stroke="#0f172a" />
+                                    <line x1="174" y1="245" x2="174" y2="300" stroke="#f8fafc" stroke-dasharray="2,2" />
+                                    <rect x="315" y="245" width="18" height="55" fill="#334155" stroke="#0f172a" />
+                                    <line x1="324" y1="245" x2="324" y2="300" stroke="#f8fafc" stroke-dasharray="2,2" />
+                                    <text x="240" y="275" fill="#1e293b" font-size="9.5" font-weight="bold" text-anchor="middle">Cọc D=<tspan x-text="formData.pile_diameter"></tspan>m (Pcp=<tspan x-text="formData.pile_capacity_allowable"></tspan>kN)</text>
+                                </g>
+                            </svg>
+                        </template>
+
+                        <template x-if="currentModule === 'pier'">
+                            <svg width="490" height="300" viewBox="0 0 490 300" class="w-full h-auto max-h-[300px] select-none">
+                                <!-- XÀ MŨ TRỤ THAY ĐỔI CHIỀU CAO (VÁT TỪ ĐẦU CÔNG-XON ĐẾN NGÀM) -->
+                                <path d="M 30,25 L 460,25 L 430,55 L 300,75 L 300,95 L 190,95 L 190,75 L 60,55 Z" fill="#93c5fd" stroke="#1e3a8a" stroke-width="2" />
+                                <text x="245" y="18" fill="#1e3a8a" font-size="10.5" font-weight="bold" text-anchor="middle">XÀ MŨ: Lxm=<tspan x-text="formData.Lxm" fill="#dc2626"></tspan>m | h_ngàm=<tspan x-text="(formData.hxm + formData.hmr).toFixed(2)"></tspan>m | h_đầu=<tspan x-text="formData.hxm"></tspan>m</text>
+                                
+                                <rect x="205" y="32" width="80" height="16" fill="#1e40af" rx="2" />
+                                <text x="245" y="44" fill="#ffffff" font-size="8.5" font-weight="bold" text-anchor="middle" x-text="formData.cap_type === 'PT' ? 'DỰ ỨNG LỰC (PT)' : 'BT THƯỜNG (RC)'"></text>
+
+                                <!-- Gối cầu -->
+                                <rect x="70" y="20" width="16" height="5" fill="#ef4444" stroke="#991b1b" />
+                                <rect x="140" y="20" width="16" height="5" fill="#ef4444" stroke="#991b1b" />
+                                <rect x="334" y="20" width="16" height="5" fill="#ef4444" stroke="#991b1b" />
+                                <rect x="404" y="20" width="16" height="5" fill="#ef4444" stroke="#991b1b" />
+
+                                <!-- THÂN TRỤ VẼ ĐẦY ĐỦ: ĐOẠN VÁT MỞ RỘNG ĐẦU BÚA + THÂN CHÍNH -->
+                                <template x-if="formData.pier_column_type === 'SINGLE'">
+                                    <g>
+                                        <polygon points="190,95 300,95 285,120 205,120" fill="#cbd5e1" stroke="#1e293b" stroke-width="1.5" />
+                                        <text x="245" y="112" fill="#1e293b" font-size="8.5" text-anchor="middle">Vát hmr=<tspan x-text="formData.hmr"></tspan>m</text>
+                                        
+                                        <polygon points="205,120 285,120 275,185 215,185" fill="#cbd5e1" stroke="#1e293b" stroke-width="2" />
+                                        <text x="245" y="150" fill="#0f172a" font-size="10.5" font-weight="bold" text-anchor="middle">Thân: bth1=<tspan x-text="formData.bth1" fill="#2563eb"></tspan>m</text>
+                                        <text x="245" y="165" fill="#475569" font-size="9" text-anchor="middle">Hth=<tspan x-text="formData.Hth"></tspan>m</text>
+                                    </g>
+                                </template>
+
+                                <template x-if="formData.pier_column_type === 'TWIN'">
+                                    <g>
+                                        <rect x="140" y="95" width="55" height="90" fill="#cbd5e1" stroke="#1e293b" stroke-width="2" />
+                                        <text x="167" y="145" fill="#0f172a" font-size="9" font-weight="bold" text-anchor="middle">Cột 1</text>
+                                        <rect x="295" y="95" width="55" height="90" fill="#cbd5e1" stroke="#1e293b" stroke-width="2" />
+                                        <text x="322" y="145" fill="#0f172a" font-size="9" font-weight="bold" text-anchor="middle">Cột 2</text>
+                                        <line x1="167" y1="120" x2="322" y2="120" stroke="#059669" stroke-width="1.5" stroke-dasharray="3,3" />
+                                        <text x="245" y="115" fill="#059669" font-size="9.5" font-weight="bold" text-anchor="middle">Khoảng cách s = <tspan x-text="formData.spacing_twin_columns"></tspan>m</text>
+                                    </g>
+                                </template>
+
+                                <!-- Lực va tàu CV -->
+                                <template x-if="formData.CV > 0">
+                                    <g>
+                                        <line x1="60" y1="160" x2="195" y2="160" stroke="#dc2626" stroke-width="3" />
+                                        <polygon points="195,160 185,155 185,165" fill="#dc2626" />
+                                        <text x="120" y="154" fill="#dc2626" font-size="9" font-weight="bold">Va tàu CV=<tspan x-text="formData.CV"></tspan>kN</text>
+                                    </g>
+                                </template>
+
+                                <!-- Bệ trụ -->
+                                <rect x="90" y="185" width="310" height="35" fill="#94a3b8" stroke="#1e293b" stroke-width="2" rx="2" />
+                                <text x="245" y="208" fill="#ffffff" font-size="10.5" font-weight="bold" text-anchor="middle">Bệ: Cbe=<tspan x-text="formData.Cbe" fill="#fde047"></tspan>m × Bbe=<tspan x-text="formData.Bbe"></tspan>m × Hbe=<tspan x-text="formData.Hbe"></tspan>m</text>
+
+                                <!-- Cọc móng -->
+                                <g>
+                                    <rect x="130" y="220" width="16" height="50" fill="#334155" stroke="#0f172a" />
+                                    <line x1="138" y1="220" x2="138" y2="270" stroke="#f8fafc" stroke-dasharray="2,2" />
+                                    <rect x="237" y="220" width="16" height="50" fill="#334155" stroke="#0f172a" />
+                                    <line x1="245" y1="220" x2="245" y2="270" stroke="#f8fafc" stroke-dasharray="2,2" />
+                                    <rect x="344" y="220" width="16" height="50" fill="#334155" stroke="#0f172a" />
+                                    <line x1="352" y1="220" x2="352" y2="270" stroke="#f8fafc" stroke-dasharray="2,2" />
+                                </g>
+                            </svg>
+                        </template>
+                    </div>
+
+                    <!-- VIEW 2: CHI TIẾT HÌNH HỌC TƯỜNG CÁNH (CHUẨN XÁC 100% THEO ẢNH 2 CỦA BẠN) -->
+                    <div x-show="svgView === 'wing_wall'" class="w-full">
+                        <svg width="490" height="300" viewBox="0 0 490 300" class="w-full h-auto max-h-[300px] select-none">
+                            <text x="245" y="20" fill="#991b1b" font-size="11.5" font-weight="bold" text-anchor="middle">
+                                SƠ ĐỒ HÌNH HỌC TƯỜNG CÁNH MỐ CHỮ U (CHI TIẾT VÁT DỐC THEO EXCEL & ẢNH 2)
+                            </text>
+
+                            <!-- ĐA GIÁC TƯỜNG CÁNH (MÀU HỒNG NHẠT NHƯ ẢNH 2) -->
+                            <polygon points="80,45 340,45 340,245 220,245 220,190 80,95" fill="#fecdd3" stroke="#b91c1c" stroke-width="2.5" />
+
+                            <!-- CÁC ĐƯỜNG KÍCH THƯỚC KỸ THUẬT (DIMENSIONS) -->
+                            <!-- 1. Chiều dài đỉnh w1 = B2 + B5 -->
+                            <line x1="80" y1="35" x2="340" y2="35" stroke="#b91c1c" stroke-width="1.5" />
+                            <text x="210" y="30" fill="#991b1b" font-size="10.5" font-weight="bold" text-anchor="middle">
+                                w1 = B2 + B5 = <tspan x-text="(formData.B2 + formData.B5).toFixed(2)"></tspan> m
+                            </text>
+
+                            <!-- 2. Chiều cao toàn bộ h1 = Htc = H2 + H3 + H4 (Bên phải) -->
+                            <line x1="355" y1="45" x2="355" y2="245" stroke="#1e293b" stroke-width="1.5" />
+                            <text x="365" y="150" fill="#0f172a" font-size="10" font-weight="bold">
+                                h1 = Htc = <tspan x-text="(formData.H2 + formData.H3 + formData.H4).toFixed(2)"></tspan> m
+                            </text>
+
+                            <!-- 3. Chiều cao đoạn trên h2 (H4) -->
+                            <line x1="65" y1="45" x2="65" y2="95" stroke="#1e293b" stroke-width="1.5" />
+                            <text x="55" y="75" fill="#0f172a" font-size="9" font-weight="bold" text-anchor="end">
+                                h2 (H4)=<tspan x-text="formData.H4"></tspan>m
+                            </text>
+
+                            <!-- 4. Chiều cao đoạn vát h3 (H3) & Chiều dài vát w2 (B5) -->
+                            <line x1="65" y1="95" x2="65" y2="190" stroke="#1e293b" stroke-width="1.5" />
+                            <text x="55" y="145" fill="#0f172a" font-size="9" font-weight="bold" text-anchor="end">
+                                h3 (H3)=<tspan x-text="formData.H3"></tspan>m
+                            </text>
+
+                            <!-- 5. Chiều cao đoạn dưới h4 (H2) -->
+                            <line x1="65" y1="190" x2="65" y2="245" stroke="#1e293b" stroke-width="1.5" />
+                            <text x="55" y="220" fill="#0f172a" font-size="9" font-weight="bold" text-anchor="end">
+                                h4 (H2)=<tspan x-text="formData.H2"></tspan>m
+                            </text>
+
+                            <!-- 6. Chiều dài đáy w3 (B2) & Chiều dài vát w2 (B5) -->
+                            <line x1="80" y1="260" x2="220" y2="260" stroke="#1e293b" stroke-width="1.5" />
+                            <text x="150" y="272" fill="#0f172a" font-size="9.5" font-weight="bold" text-anchor="middle">
+                                w2 = B5 = <tspan x-text="formData.B5"></tspan> m
+                            </text>
+
+                            <line x1="220" y1="260" x2="340" y2="260" stroke="#1e293b" stroke-width="1.5" />
+                            <text x="280" y="272" fill="#0f172a" font-size="9.5" font-weight="bold" text-anchor="middle">
+                                w3 = B2 = <tspan x-text="formData.B2"></tspan> m
+                            </text>
+
+                            <text x="270" y="145" fill="#991b1b" font-size="11" font-weight="bold" text-anchor="middle">
+                                Dày C3 = <tspan x-text="formData.C3"></tspan> m
+                            </text>
+                        </svg>
+                    </div>
+
+                    <!-- VIEW 3: MẶT BẰNG BỆ CHÉO GÓC ALPHA & VỊ TRÍ THÂN & TOÀN BỘ CỌC (HIỂN THỊ ĐẦY ĐỦ CỌC) -->
+                    <div x-show="svgView === 'skew_plan'" class="w-full">
+                        <svg width="520" height="315" viewBox="0 0 520 315" class="w-full h-auto max-h-[315px] select-none">
+                            <text x="260" y="16" fill="#1e3a8a" font-size="11" font-weight="bold" text-anchor="middle">
+                                MẶT BẰNG BỆ MỐ CHÉO GÓC α = <tspan x-text="formData.skew_angle" fill="#dc2626"></tspan>° (HỆ TRỤC CỤC BỘ BỆ MỐ X_mố, Y_mố)
+                            </text>
+                            
+                            <!-- ĐƯỜNG TIM CẦU (NẰM NGANG) -->
+                            <line x1="20" y1="140" x2="500" y2="140" stroke="#94a3b8" stroke-dasharray="5,3" stroke-width="1.5" />
+                            <text x="495" y="136" fill="#64748b" font-size="8.5">Tim cầu</text>
+
+                            <!-- BỆ HÌNH BÌNH HÀNH CHÉO THEO GÓC SKEW_ANGLE & KÍCH THƯỚC B1, C1 -->
+                            <polygon :points="getPlanFootingPolygon()" fill="#e2e8f0" stroke="#1e3a8a" stroke-width="2.5" />
+
+                            <!-- THÂN MỐ NẰM LỆCH TRÊN BỆ THEO KHOẢNG CÁCH MŨI B4 VÀ GÓT BỆ -->
+                            <polygon :points="getPlanStemPolygon()" fill="#94a3b8" stroke="#0f172a" stroke-width="1.5" />
+                            <text x="260" y="143" fill="#0f172a" font-size="9.5" font-weight="bold" text-anchor="middle">Thân B3=<tspan x-text="formData.B3 || formData.hth1"></tspan>m</text>
+
+                            <!-- TIM MỐ / TRỤC Y_mố (ĐƯỜNG CHẤM GẠCH THEO PHƯƠNG CHÉO ALPHA) -->
+                            <line x1="290" y1="20" x2="230" y2="260" stroke="#b91c1c" stroke-dasharray="4,2" stroke-width="1.5" />
+                            <text x="295" y="32" fill="#b91c1c" font-size="8.5" font-weight="bold">Trục Y_mố</text>
+
+                            <!-- ĐƯỜNG GIÓNG KÍCH THƯỚC TỌA ĐỘ VUÔNG GÓC X = -1.8m VÀ X = +1.8m -->
+                            <line x1="228" y1="140" x2="260" y2="140" stroke="#2563eb" stroke-width="1.5" />
+                            <text x="210" y="132" fill="#2563eb" font-size="8" font-weight="bold">X=-1.8m</text>
+                            
+                            <line x1="260" y1="140" x2="292" y2="140" stroke="#059669" stroke-width="1.5" />
+                            <text x="300" y="132" fill="#059669" font-size="8" font-weight="bold">X=+1.8m</text>
+
+                            <!-- TOÀN BỘ CÁC CỌC BỐ TRÍ THEO TỌA ĐỘ THỰC TẾ (X, Y) -->
+                            <g x-html="renderPilesSvgString()"></g>
+
+                            <!-- GHI CHÚ KÍCH THƯỚC VỊ TRÍ TƯƠNG QUAN -->
+                            <text x="30" y="280" fill="#334155" font-size="8.5" font-weight="bold">
+                                B1=<tspan x-text="formData.B1 || formData.Bbe"></tspan>m | C1=<tspan x-text="formData.C1 || formData.Cbe"></tspan>m | Hàng sau: 5 cọc (X=-1.8m) | Hàng trước: 6 cọc (X=+1.8m)
+                            </text>
+                            <text x="30" y="296" fill="#b91c1c" font-size="8.5" font-weight="bold">
+                                💡 Ghi chú: X=-1.8m và +1.8m là khoảng cách đo vuông góc từ tim mố ra hàng cọc (2 hàng cọc chạy song song thân mố).
+                            </text>
+                        </svg>
+                    </div>
+
+                    <!-- VIEW 4: CÁP DƯL XÀ MŨ (CHO PIER PT) -->
+                    <div x-show="svgView === 'tendons'" class="w-full">
+                        <svg width="490" height="300" viewBox="0 0 490 300" class="w-full h-auto max-h-[300px] select-none">
+                            <text x="245" y="20" fill="#7e22ce" font-size="11" font-weight="bold" text-anchor="middle">SƠ ĐỒ ĐƯỜNG CÁP DƯL XÀ MŨ (G1..G7)</text>
+                            <path d="M 40,40 L 450,40 L 420,100 L 300,100 L 300,180 L 190,180 L 190,100 L 70,100 Z" fill="#faf5ff" stroke="#7e22ce" stroke-width="2" />
+                            <path d="M 50,55 Q 245,48 440,55" fill="none" stroke="#dc2626" stroke-width="3" />
+                            <text x="245" y="44" fill="#dc2626" font-size="9" font-weight="bold" text-anchor="middle">Bó cáp G1 (8 bó × 12 tao 15.2mm)</text>
+                            <path d="M 50,75 Q 245,55 440,75" fill="none" stroke="#2563eb" stroke-width="2.5" />
+                            <text x="245" y="70" fill="#2563eb" font-size="9" font-weight="bold" text-anchor="middle">Bó cáp G2 (6 bó × 12 tao 15.2mm)</text>
+                        </svg>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- 2. DETAILED INPUT TABS -->
+            <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden flex flex-col">
+                <div class="flex border-b border-slate-200 bg-slate-50 text-xs font-bold overflow-x-auto">
+                    <button @click="activeTab = 'general'" :class="activeTab === 'general' ? 'active' : 'text-slate-600'" class="tab-btn px-3.5 py-2.5 whitespace-nowrap">
+                        1. Thông Tin & KCN
+                    </button>
+                    <button @click="activeTab = 'geometry'" :class="activeTab === 'geometry' ? 'active' : 'text-slate-600'" class="tab-btn px-3.5 py-2.5 whitespace-nowrap">
+                        2. Hình Học & Vát Thân
+                    </button>
+                    <button @click="activeTab = 'rebar'" :class="activeTab === 'rebar' ? 'active' : 'text-slate-600'" class="tab-btn px-3.5 py-2.5 whitespace-nowrap">
+                        3. Cốt Thép & Đai Từng Bộ Phận
+                    </button>
+                    <template x-if="currentModule === 'pier' && formData.cap_type === 'PT'">
+                        <button @click="activeTab = 'tendons'" :class="activeTab === 'tendons' ? 'active text-purple-700' : 'text-slate-600'" class="tab-btn px-3.5 py-2.5 whitespace-nowrap">
+                            4. Cáp DƯL G1..G7
+                        </button>
+                    </template>
+                    <button @click="activeTab = 'piles_table'" :class="activeTab === 'piles_table' ? 'active' : 'text-slate-600'" class="tab-btn px-3.5 py-2.5 whitespace-nowrap">
+                        5. Tọa Độ Từng Cọc
+                    </button>
+                    <button @click="activeTab = 'loads_env'" :class="activeTab === 'loads_env' ? 'active' : 'text-slate-600'" class="tab-btn px-3.5 py-2.5 whitespace-nowrap">
+                        6. Gió, ĐĐ & Va Tàu
+                    </button>
+                </div>
+
+                <!-- TAB 1: THÔNG TIN CHUNG & KCN -->
+                <div x-show="activeTab === 'general'" class="p-4 space-y-3 text-xs">
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block font-bold text-slate-700 mb-1">Tên Dự Án / Cầu</label>
+                            <input type="text" x-model="formData.project_name" class="w-full border border-slate-300 rounded p-1.5 font-medium">
+                        </div>
+                        <div>
+                            <label class="block font-bold text-slate-700 mb-1" x-text="currentModule === 'abutment' ? 'Tên Mố Cầu' : 'Tên Trụ Cầu'"></label>
+                            <input type="text" x-model="currentModule === 'abutment' ? formData.abutment_name : formData.pier_name" class="w-full border border-slate-300 rounded p-1.5 font-bold text-blue-700">
+                        </div>
+                    </div>
+
+                    <div class="border-t border-slate-200 pt-3">
+                        <h4 class="font-bold text-blue-900 mb-2">Quy Mô Nhịp & Bề Rộng Mặt Cầu</h4>
+                        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                            <template x-if="currentModule === 'abutment'">
+                                <div>
+                                    <label class="block text-slate-600 mb-1">Chiều dài nhịp L (m)</label>
+                                    <input type="number" step="0.1" x-model.number="formData.span_L" class="w-full border border-slate-300 rounded p-1.5 font-bold">
+                                </div>
+                            </template>
+                            <template x-if="currentModule === 'pier'">
+                                <div class="contents">
+                                    <div>
+                                        <label class="block text-slate-600 mb-1">Nhịp TRÁI L1 (m)</label>
+                                        <input type="number" step="0.1" x-model.number="formData.span_L1" class="w-full border border-slate-300 rounded p-1.5 font-bold">
+                                    </div>
+                                    <div>
+                                        <label class="block text-slate-600 mb-1">Nhịp PHẢI L2 (m)</label>
+                                        <input type="number" step="0.1" x-model.number="formData.span_L2" class="w-full border border-slate-300 rounded p-1.5 font-bold">
+                                    </div>
+                                </div>
+                            </template>
+                            <div>
+                                <label class="block text-slate-600 mb-1">Bề rộng cầu W (m)</label>
+                                <input type="number" step="0.1" x-model.number="formData.width_W" class="w-full border border-slate-300 rounded p-1.5">
+                            </div>
+                            <div>
+                                <label class="block text-slate-600 mb-1">Bề rộng xe Bxe (m)</label>
+                                <input type="number" step="0.1" x-model.number="formData.width_Bxe" class="w-full border border-slate-300 rounded p-1.5">
+                            </div>
+                            <div>
+                                <label class="block text-slate-600 mb-1">Số làn xe (làn)</label>
+                                <input type="number" x-model.number="formData.num_lanes" class="w-full border border-slate-300 rounded p-1.5 font-bold text-blue-700">
+                            </div>
+                            <div>
+                                <label class="block text-slate-600 mb-1">Góc chéo mố/trụ α (°)</label>
+                                <input type="number" step="1" x-model.number="formData.skew_angle" class="w-full border border-rose-400 bg-rose-50 rounded p-1.5 font-black text-rose-800">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="border-t border-slate-200 pt-3">
+                        <h4 class="font-bold text-blue-900 mb-2">Phản Lực Tĩnh Tải KCN (kN)</h4>
+                        <div class="grid grid-cols-2 gap-3">
+                            <template x-if="currentModule === 'abutment'">
+                                <div class="contents">
+                                    <div>
+                                        <label class="block text-slate-600 mb-1">Phản lực DC KCN (kN)</label>
+                                        <input type="number" step="10" x-model.number="formData.DC_kcn" class="w-full border border-slate-300 rounded p-1.5">
+                                    </div>
+                                    <div>
+                                        <label class="block text-slate-600 mb-1">Phản lực DW Lớp phủ (kN)</label>
+                                        <input type="number" step="10" x-model.number="formData.DW_kcn" class="w-full border border-slate-300 rounded p-1.5">
+                                    </div>
+                                </div>
+                            </template>
+                            <template x-if="currentModule === 'pier'">
+                                <div class="contents">
+                                    <div>
+                                        <label class="block text-slate-600 mb-1">DC Trái / Phải (kN)</label>
+                                        <div class="flex gap-2">
+                                            <input type="number" step="10" x-model.number="formData.DC1_left" class="w-1/2 border border-slate-300 rounded p-1.5">
+                                            <input type="number" step="10" x-model.number="formData.DC1_right" class="w-1/2 border border-slate-300 rounded p-1.5">
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label class="block text-slate-600 mb-1">DW Trái / Phải (kN)</label>
+                                        <div class="flex gap-2">
+                                            <input type="number" step="10" x-model.number="formData.DW_left" class="w-1/2 border border-slate-300 rounded p-1.5">
+                                            <input type="number" step="10" x-model.number="formData.DW_right" class="w-1/2 border border-slate-300 rounded p-1.5">
+                                        </div>
+                                    </div>
+                                </div>
+                            </template>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB 2: HÌNH HỌC & VÁT TIẾT DIỆN (CÓ HIỂN THỊ CÔNG THỨC HTC = H2 + H3 + H4) -->
+                <div x-show="activeTab === 'geometry'" class="p-4 space-y-3 text-xs">
+                    <template x-if="currentModule === 'abutment'">
+                        <div class="space-y-3">
+                            <h4 class="font-bold text-blue-900">Kích Thước Thân, Đỉnh & Bệ Mố</h4>
+                            <div class="grid grid-cols-3 gap-3">
+                                <div>
+                                    <label class="block text-slate-600 mb-1">B1 (Rộng bệ dọc cầu)</label>
+                                    <input type="number" step="0.1" x-model.number="formData.B1" class="w-full border border-slate-300 rounded p-1.5 font-bold">
+                                </div>
+                                <div>
+                                    <label class="block text-slate-600 mb-1">B3 (Dày thân mố)</label>
+                                    <input type="number" step="0.1" x-model.number="formData.B3" class="w-full border border-slate-300 rounded p-1.5 font-bold text-blue-700">
+                                </div>
+                                <div>
+                                    <label class="block text-slate-600 mb-1">B4 (Mũi bệ phía nhịp)</label>
+                                    <input type="number" step="0.1" x-model.number="formData.B4" class="w-full border border-slate-300 rounded p-1.5 font-bold text-emerald-700">
+                                </div>
+                                <div>
+                                    <label class="block text-slate-600 mb-1">H1 (Chiều cao bệ)</label>
+                                    <input type="number" step="0.1" x-model.number="formData.H1" class="w-full border border-slate-300 rounded p-1.5 font-bold">
+                                </div>
+                                <div>
+                                    <label class="block text-slate-600 mb-1">H6 (Chiều cao thân)</label>
+                                    <input type="number" step="0.1" x-model.number="formData.H6" class="w-full border border-slate-300 rounded p-1.5 font-bold text-blue-700">
+                                </div>
+                                <div>
+                                    <label class="block text-slate-600 mb-1">H7 (Cao tường đỉnh)</label>
+                                    <input type="number" step="0.1" x-model.number="formData.H7" class="w-full border border-slate-300 rounded p-1.5 font-bold">
+                                </div>
+                                <div>
+                                    <label class="block text-slate-600 mb-1">C1 (Rộng bệ ngang cầu)</label>
+                                    <input type="number" step="0.1" x-model.number="formData.C1" class="w-full border border-slate-300 rounded p-1.5 font-bold">
+                                </div>
+                                <div>
+                                    <label class="block text-slate-600 mb-1">B7 (Dày tường đỉnh)</label>
+                                    <input type="number" step="0.1" x-model.number="formData.B7" class="w-full border border-slate-300 rounded p-1.5">
+                                </div>
+                                <div>
+                                    <label class="block text-slate-600 mb-1">B8 (K/c gối - tường đỉnh)</label>
+                                    <input type="number" step="0.05" x-model.number="formData.B8" class="w-full border border-slate-300 rounded p-1.5">
+                                </div>
+                            </div>
+
+                            <div class="border-t border-slate-200 pt-3">
+                                <div class="flex justify-between items-center mb-1.5">
+                                    <h4 class="font-bold text-blue-900">Kích Thước Tường Cánh Mố</h4>
+                                    <span class="bg-amber-100 text-amber-900 font-bold px-2 py-0.5 rounded text-[11px] border border-amber-300">
+                                        Htc = H2 + H3 + H4 = <span x-text="((formData.H2 || 0) + (formData.H3 || 0) + (formData.H4 || 0)).toFixed(2)"></span> m
+                                    </span>
+                                </div>
+                                <div class="grid grid-cols-4 gap-2">
+                                    <div>
+                                        <label class="block text-slate-600 mb-1">w3 = B2 (Dài đáy m)</label>
+                                        <input type="number" step="0.1" x-model.number="formData.B2" class="w-full border border-slate-300 rounded p-1 font-bold">
+                                    </div>
+                                    <div>
+                                        <label class="block text-slate-600 mb-1">w2 = B5 (Dài vát đuôi m)</label>
+                                        <input type="number" step="0.1" x-model.number="formData.B5" class="w-full border border-slate-300 rounded p-1 font-bold">
+                                    </div>
+                                    <div>
+                                        <label class="block text-slate-600 mb-1">C3 (Chiều dày cánh m)</label>
+                                        <input type="number" step="0.05" x-model.number="formData.C3" class="w-full border border-slate-300 rounded p-1 font-bold text-rose-700">
+                                    </div>
+                                    <div>
+                                        <label class="block text-slate-600 mb-1">h4 = H2 (Cao cánh dưới m)</label>
+                                        <input type="number" step="0.1" x-model.number="formData.H2" class="w-full border border-slate-300 rounded p-1">
+                                    </div>
+                                    <div>
+                                        <label class="block text-slate-600 mb-1">h3 = H3 (Cao vát giữa m)</label>
+                                        <input type="number" step="0.1" x-model.number="formData.H3" class="w-full border border-slate-300 rounded p-1">
+                                    </div>
+                                    <div>
+                                        <label class="block text-slate-600 mb-1">h2 = H4 (Cao cánh trên m)</label>
+                                        <input type="number" step="0.1" x-model.number="formData.H4" class="w-full border border-slate-300 rounded p-1">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </template>
+
+                    <template x-if="currentModule === 'pier'">
+                        <div class="space-y-3">
+                            <div class="bg-blue-50 border border-blue-200 rounded-lg p-2.5 grid grid-cols-2 gap-3">
+                                <div>
+                                    <label class="block font-bold text-blue-900 mb-1">Hình thức Thân Trụ:</label>
+                                    <select x-model="formData.pier_column_type" class="w-full border border-blue-300 rounded p-1.5 bg-white font-bold text-blue-800">
+                                        <option value="SINGLE">Trụ 1 Thân Đơn</option>
+                                        <option value="TWIN">Trụ 2 Thân (Twin Pier)</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block font-bold text-purple-900 mb-1">Hình thức Xà Mũ:</label>
+                                    <select x-model="formData.cap_type" class="w-full border border-purple-300 rounded p-1.5 bg-white font-bold text-purple-800">
+                                        <option value="RC">Xà Mũ Bê Tông Thường (RC)</option>
+                                        <option value="PT">Xà Mũ Dự Ứng Lực (PT - DƯL)</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <h4 class="font-bold text-blue-900">Kích Thước Thân Trụ & Tiết Diện Thay Đổi (Taper)</h4>
+                            <div class="grid grid-cols-3 gap-3">
+                                <div>
+                                    <label class="block text-slate-600 mb-1">Cạnh ngang đáy bth1 (m)</label>
+                                    <input type="number" step="0.1" x-model.number="formData.bth1" class="w-full border border-slate-300 rounded p-1.5 font-bold text-blue-700">
+                                </div>
+                                <div>
+                                    <label class="block text-slate-600 mb-1">Cạnh dọc đáy hth1 (m)</label>
+                                    <input type="number" step="0.1" x-model.number="formData.hth1" class="w-full border border-slate-300 rounded p-1.5 font-bold">
+                                </div>
+                                <div>
+                                    <label class="block text-slate-600 mb-1">Chiều cao thân Hth (m)</label>
+                                    <input type="number" step="0.1" x-model.number="formData.Hth" class="w-full border border-slate-300 rounded p-1.5 font-bold text-blue-700">
+                                </div>
+                                <div>
+                                    <label class="block text-slate-600 mb-1">Đổi tiết diện (Tapered)?</label>
+                                    <select x-model.number="formData.is_tapered" class="w-full border border-slate-300 rounded p-1.5 bg-white font-bold">
+                                        <option value="1">1: Có đổi tiết diện</option>
+                                        <option value="0">0: Không đổi (thẳng đứng)</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-slate-600 mb-1">Cạnh ngang đỉnh bth2 (m)</label>
+                                    <input type="number" step="0.1" x-model.number="formData.bth2" class="w-full border border-slate-300 rounded p-1.5">
+                                </div>
+                                <div>
+                                    <label class="block text-slate-600 mb-1">Cao vát mở rộng hmr (m)</label>
+                                    <input type="number" step="0.1" x-model.number="formData.hmr" class="w-full border border-slate-300 rounded p-1.5">
+                                </div>
+                                <div>
+                                    <label class="block text-slate-600 mb-1">Dài xà mũ Lxm (m)</label>
+                                    <input type="number" step="0.1" x-model.number="formData.Lxm" class="w-full border border-slate-300 rounded p-1.5 font-bold">
+                                </div>
+                                <div>
+                                    <label class="block text-slate-600 mb-1">Rộng xà mũ bxm (m)</label>
+                                    <input type="number" step="0.1" x-model.number="formData.bxm" class="w-full border border-slate-300 rounded p-1.5">
+                                </div>
+                                <div>
+                                    <label class="block text-slate-600 mb-1">Cao đầu xà mũ hxm (m)</label>
+                                    <input type="number" step="0.1" x-model.number="formData.hxm" class="w-full border border-slate-300 rounded p-1.5 font-bold">
+                                </div>
+                                <div>
+                                    <label class="block text-slate-600 mb-1">Bệ Bbe × Cbe (m)</label>
+                                    <div class="flex gap-1">
+                                        <input type="number" step="0.1" x-model.number="formData.Bbe" class="w-1/2 border border-slate-300 rounded p-1.5">
+                                        <input type="number" step="0.1" x-model.number="formData.Cbe" class="w-1/2 border border-slate-300 rounded p-1.5 font-bold">
+                                    </div>
+                                </div>
+                                <div>
+                                    <label class="block text-slate-600 mb-1">Cao bệ Hbe (m)</label>
+                                    <input type="number" step="0.1" x-model.number="formData.Hbe" class="w-full border border-slate-300 rounded p-1.5">
+                                </div>
+                                <template x-if="formData.pier_column_type === 'TWIN'">
+                                    <div>
+                                        <label class="block font-bold text-emerald-700 mb-1">Khoảng cách 2 thân s (m)</label>
+                                        <input type="number" step="0.1" x-model.number="formData.spacing_twin_columns" class="w-full border border-emerald-400 bg-emerald-50 rounded p-1.5 font-bold text-emerald-900">
+                                    </div>
+                                </template>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+
+                <!-- TAB 3: CỐT THÉP & ĐAI TỪNG BỘ PHẬN -->
+                <div x-show="activeTab === 'rebar'" class="p-4 space-y-3 text-xs">
+                    <template x-if="currentModule === 'abutment'">
+                        <div class="space-y-3">
+                            <!-- 1. THÂN MỐ -->
+                            <div class="bg-slate-50 p-2.5 rounded border border-slate-200">
+                                <h4 class="font-bold text-blue-900 mb-1.5">1. Cốt Thép Tường Thân Mố (Kéo Mặt Sau + Nén Mặt Trước)</h4>
+                                <div class="grid grid-cols-3 gap-2">
+                                    <div>
+                                        <label class="block text-slate-600">Thép kéo MẶT SAU (đất đắp) Ф</label>
+                                        <input type="number" step="1" x-model.number="formData.rebar_diam_stem_rear" class="w-full border border-slate-300 rounded p-1 font-bold text-blue-700">
+                                    </div>
+                                    <div>
+                                        <label class="block text-slate-600">Bước thép kéo mặt sau (mm)</label>
+                                        <input type="number" step="10" x-model.number="formData.rebar_spacing_stem_rear" class="w-full border border-slate-300 rounded p-1 font-bold">
+                                    </div>
+                                    <div>
+                                        <label class="block text-slate-600">Thép nén MẶT TRƯỚC (nhịp) Ф</label>
+                                        <input type="number" step="1" x-model.number="formData.rebar_diam_stem_front" class="w-full border border-slate-300 rounded p-1 font-bold text-emerald-700">
+                                    </div>
+                                    <div>
+                                        <label class="block text-slate-600">Thép đai thân Ф (mm)</label>
+                                        <input type="number" step="1" x-model.number="formData.stirrup_diam_stem" class="w-full border border-slate-300 rounded p-1">
+                                    </div>
+                                    <div>
+                                        <label class="block text-slate-600">Bước đai thân s (mm)</label>
+                                        <input type="number" step="10" x-model.number="formData.stirrup_spacing_stem" class="w-full border border-slate-300 rounded p-1">
+                                    </div>
+                                    <div>
+                                        <label class="block text-slate-600">Lớp bảo vệ c (mm)</label>
+                                        <input type="number" step="5" x-model.number="formData.cover_stem" class="w-full border border-slate-300 rounded p-1">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 2. TƯỜNG ĐỈNH MỐ -->
+                            <div class="bg-amber-50/50 p-2.5 rounded border border-amber-200">
+                                <h4 class="font-bold text-amber-950 mb-1.5">2. Cốt Thép Tường Đỉnh Mố (Tách Riêng)</h4>
+                                <div class="grid grid-cols-3 gap-2">
+                                    <div>
+                                        <label class="block text-slate-600">Thép uốn mặt sau (đất đắp) Ф</label>
+                                        <input type="number" step="1" x-model.number="formData.rebar_diam_backwall" class="w-full border border-slate-300 rounded p-1 font-bold text-amber-900">
+                                    </div>
+                                    <div>
+                                        <label class="block text-slate-600">Bước thép mặt sau (mm)</label>
+                                        <input type="number" step="10" x-model.number="formData.rebar_spacing_backwall" class="w-full border border-slate-300 rounded p-1 font-bold">
+                                    </div>
+                                    <div>
+                                        <label class="block text-slate-600">Thép cấu tạo mặt trước Ф</label>
+                                        <input type="number" step="1" x-model.number="formData.rebar_diam_backwall_front" class="w-full border border-slate-300 rounded p-1">
+                                    </div>
+                                    <div>
+                                        <label class="block text-slate-600">Thép đai tường đỉnh Ф</label>
+                                        <input type="number" step="1" x-model.number="formData.stirrup_diam_backwall" class="w-full border border-slate-300 rounded p-1">
+                                    </div>
+                                    <div>
+                                        <label class="block text-slate-600">Bước đai đỉnh s (mm)</label>
+                                        <input type="number" step="10" x-model.number="formData.stirrup_spacing_backwall" class="w-full border border-slate-300 rounded p-1">
+                                    </div>
+                                    <div>
+                                        <label class="block text-slate-600">Lớp bảo vệ (mm)</label>
+                                        <input type="number" step="5" x-model.number="formData.cover_backwall" class="w-full border border-slate-300 rounded p-1">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 3. TƯỜNG CÁNH MỐ -->
+                            <div class="bg-blue-50/50 p-2.5 rounded border border-blue-200">
+                                <h4 class="font-bold text-blue-950 mb-1.5">3. Cốt Thép Tường Cánh Mố (Hillerborg - Tách Riêng)</h4>
+                                <div class="grid grid-cols-3 gap-2">
+                                    <div>
+                                        <label class="block text-slate-600">Thép ngang ngàm đứng trong Ф</label>
+                                        <input type="number" step="1" x-model.number="formData.rebar_diam_wing_horiz" class="w-full border border-slate-300 rounded p-1 font-bold text-blue-800">
+                                    </div>
+                                    <div>
+                                        <label class="block text-slate-600">Bước thép ngang trong s</label>
+                                        <input type="number" step="10" x-model.number="formData.rebar_spacing_wing_horiz" class="w-full border border-slate-300 rounded p-1 font-bold">
+                                    </div>
+                                    <div>
+                                        <label class="block text-slate-600">Thép đứng ngàm đáy trong Ф</label>
+                                        <input type="number" step="1" x-model.number="formData.rebar_diam_wing_vert" class="w-full border border-slate-300 rounded p-1 font-bold text-blue-800">
+                                    </div>
+                                    <div>
+                                        <label class="block text-slate-600">Bước thép đứng trong s</label>
+                                        <input type="number" step="10" x-model.number="formData.rebar_spacing_wing_vert" class="w-full border border-slate-300 rounded p-1 font-bold">
+                                    </div>
+                                    <div>
+                                        <label class="block text-slate-600">Thép đai cánh Ф (mm)</label>
+                                        <input type="number" step="1" x-model.number="formData.stirrup_diam_wing" class="w-full border border-slate-300 rounded p-1">
+                                    </div>
+                                    <div>
+                                        <label class="block text-slate-600">Bước đai cánh s (mm)</label>
+                                        <input type="number" step="10" x-model.number="formData.stirrup_spacing_wing" class="w-full border border-slate-300 rounded p-1">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 4. BỆ MỐ -->
+                            <div class="bg-emerald-50/50 p-2.5 rounded border border-emerald-200">
+                                <h4 class="font-bold text-emerald-950 mb-1.5">4. Cốt Thép Bệ Mố (Phương Dọc Cầu + Phương Ngang Cầu)</h4>
+                                <div class="grid grid-cols-3 gap-2">
+                                    <div>
+                                        <label class="block text-slate-600">Thép ĐÁY phương dọc (uốn chính) Ф</label>
+                                        <input type="number" step="1" x-model.number="formData.rebar_diam_footing_bot_x" class="w-full border border-slate-300 rounded p-1 font-bold text-emerald-800">
+                                    </div>
+                                    <div>
+                                        <label class="block text-slate-600">Bước thép đáy dọc cầu s (mm)</label>
+                                        <input type="number" step="10" x-model.number="formData.rebar_spacing_footing_bot_x" class="w-full border border-slate-300 rounded p-1 font-bold">
+                                    </div>
+                                    <div>
+                                        <label class="block text-slate-600">Thép ĐỈNH phương dọc (nén gót) Ф</label>
+                                        <input type="number" step="1" x-model.number="formData.rebar_diam_footing_top_x" class="w-full border border-slate-300 rounded p-1 font-bold text-emerald-800">
+                                    </div>
+                                    <div>
+                                        <label class="block text-slate-600">Thép ĐÁY phương ngang (phân bố) Ф</label>
+                                        <input type="number" step="1" x-model.number="formData.rebar_diam_footing_bot_y" class="w-full border border-slate-300 rounded p-1">
+                                    </div>
+                                    <div>
+                                        <label class="block text-slate-600">Thép đai chống cắt bệ Ф</label>
+                                        <input type="number" step="1" x-model.number="formData.stirrup_diam_footing" class="w-full border border-slate-300 rounded p-1">
+                                    </div>
+                                    <div>
+                                        <label class="block text-slate-600">Bước đai bệ s (mm)</label>
+                                        <input type="number" step="10" x-model.number="formData.stirrup_spacing_footing" class="w-full border border-slate-300 rounded p-1">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </template>
+
+                    <template x-if="currentModule === 'pier'">
+                        <div class="space-y-3">
+                            <div class="bg-slate-50 p-2.5 rounded border border-slate-200">
+                                <h4 class="font-bold text-blue-900 mb-1.5">1. Cốt Thép Thân Trụ</h4>
+                                <div class="grid grid-cols-3 gap-2">
+                                    <div>
+                                        <label class="block text-slate-600">Thép dọc thân Ф (mm)</label>
+                                        <input type="number" step="1" x-model.number="formData.rebar_diam_stem" class="w-full border border-slate-300 rounded p-1 font-bold text-blue-700">
+                                    </div>
+                                    <div>
+                                        <label class="block text-slate-600">Bước thép dọc s (mm)</label>
+                                        <input type="number" step="10" x-model.number="formData.rebar_spacing_stem" class="w-full border border-slate-300 rounded p-1 font-bold">
+                                    </div>
+                                    <div>
+                                        <label class="block text-slate-600">Thép đai chu vi Ф (mm)</label>
+                                        <input type="number" step="1" x-model.number="formData.stirrup_diam_stem" class="w-full border border-slate-300 rounded p-1">
+                                    </div>
+                                    <div>
+                                        <label class="block text-slate-600">Bước đai thân s (mm)</label>
+                                        <input type="number" step="10" x-model.number="formData.stirrup_spacing_stem" class="w-full border border-slate-300 rounded p-1">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <template x-if="formData.cap_type === 'RC'">
+                                <div class="bg-amber-50/50 p-2.5 rounded border border-amber-200">
+                                    <h4 class="font-bold text-blue-900 mb-1.5">2. Cốt Thép Xà Mũ RC (Kéo Đỉnh + Nén Đáy + Đai)</h4>
+                                    <div class="grid grid-cols-4 gap-2">
+                                        <div>
+                                            <label class="block text-slate-600">Số thanh kéo đỉnh</label>
+                                            <input type="number" step="2" x-model.number="formData.num_bars_cap_top" class="w-full border border-slate-300 rounded p-1 font-bold text-blue-700">
+                                        </div>
+                                        <div>
+                                            <label class="block text-slate-600">Đường kính kéo Ф</label>
+                                            <input type="number" step="1" x-model.number="formData.rebar_diam_cap_top" class="w-full border border-slate-300 rounded p-1 font-bold">
+                                        </div>
+                                        <div>
+                                            <label class="block text-slate-600">Số thanh nén đáy</label>
+                                            <input type="number" step="2" x-model.number="formData.num_bars_cap_bot" class="w-full border border-slate-300 rounded p-1 font-bold text-emerald-700">
+                                        </div>
+                                        <div>
+                                            <label class="block text-slate-600">Đường kính nén Ф</label>
+                                            <input type="number" step="1" x-model.number="formData.rebar_diam_cap_bot" class="w-full border border-slate-300 rounded p-1 font-bold text-emerald-700">
+                                        </div>
+                                        <div>
+                                            <label class="block text-slate-600">Thép đai xà mũ Ф</label>
+                                            <input type="number" step="1" x-model.number="formData.stirrup_diam_cap" class="w-full border border-slate-300 rounded p-1 font-bold">
+                                        </div>
+                                        <div>
+                                            <label class="block text-slate-600">Bước đai s (mm)</label>
+                                            <input type="number" step="10" x-model.number="formData.stirrup_spacing_cap" class="w-full border border-slate-300 rounded p-1 font-bold">
+                                        </div>
+                                        <div>
+                                            <label class="block text-slate-600">Số nhánh đai</label>
+                                            <input type="number" step="1" x-model.number="formData.stirrup_legs_cap" class="w-full border border-slate-300 rounded p-1">
+                                        </div>
+                                    </div>
+                                </div>
+                            </template>
+
+                            <div class="bg-emerald-50/50 p-2.5 rounded border border-emerald-200">
+                                <h4 class="font-bold text-blue-900 mb-1.5">3. Cốt Thép Bệ Trụ</h4>
+                                <div class="grid grid-cols-3 gap-2">
+                                    <div>
+                                        <label class="block text-slate-600">Thép đáy phương X Ф</label>
+                                        <input type="number" step="1" x-model.number="formData.rebar_diam_footing_bot_x" class="w-full border border-slate-300 rounded p-1 font-bold text-blue-700">
+                                    </div>
+                                    <div>
+                                        <label class="block text-slate-600">Thép đáy phương Y Ф</label>
+                                        <input type="number" step="1" x-model.number="formData.rebar_diam_footing_bot_y" class="w-full border border-slate-300 rounded p-1 font-bold text-blue-700">
+                                    </div>
+                                    <div>
+                                        <label class="block text-slate-600">Thép đỉnh bệ (nén) Ф</label>
+                                        <input type="number" step="1" x-model.number="formData.rebar_diam_footing_top_x" class="w-full border border-slate-300 rounded p-1 font-bold text-emerald-700">
+                                    </div>
+                                    <div>
+                                        <label class="block text-slate-600">Thép đai bệ trụ Ф</label>
+                                        <input type="number" step="1" x-model.number="formData.stirrup_diam_footing" class="w-full border border-slate-300 rounded p-1">
+                                    </div>
+                                    <div>
+                                        <label class="block text-slate-600">Bước đai bệ s (mm)</label>
+                                        <input type="number" step="10" x-model.number="formData.stirrup_spacing_footing" class="w-full border border-slate-300 rounded p-1">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+
+                <!-- TAB 4: CÁP DƯL G1..G7 (PIER PT) -->
+                <div x-show="activeTab === 'tendons'" class="p-4 space-y-3 text-xs">
+                    <h4 class="font-bold text-purple-900">Khai Báo Cáp Dự Ứng Lực Xà Mũ & 7 Nhóm Cáp G1..G7</h4>
+                    <div class="grid grid-cols-3 gap-2">
+                        <div>
+                            <label class="block text-slate-600">Cường độ cáp fpu (MPa)</label>
+                            <input type="number" step="10" x-model.number="formData.fpu" class="w-full border border-slate-300 rounded p-1 font-bold">
+                        </div>
+                        <div>
+                            <label class="block text-slate-600">Hệ số ứng suất căng kfpj</label>
+                            <input type="number" step="0.01" x-model.number="formData.kfpj" class="w-full border border-slate-300 rounded p-1">
+                        </div>
+                        <div>
+                            <label class="block text-slate-600">Độ tụt neo Δanchor (mm)</label>
+                            <input type="number" step="1" x-model.number="formData.delta_anchor" class="w-full border border-slate-300 rounded p-1">
+                        </div>
+                    </div>
+
+                    <div class="border-t border-slate-200 pt-2">
+                        <div class="font-bold text-slate-700 mb-1">Bảng Khai Báo 7 Nhóm Cáp (G1..G7):</div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full border-collapse border border-slate-200 text-center">
+                                <tr class="bg-purple-100 text-purple-900 font-bold">
+                                    <th class="p-1 border">Nhóm</th>
+                                    <th class="p-1 border">Số bó</th>
+                                    <th class="p-1 border">Tao/bó</th>
+                                    <th class="p-1 border">A tao (mm²)</th>
+                                    <th class="p-1 border">Lệch tâm ngàm (mm)</th>
+                                    <th class="p-1 border">Stage căng</th>
+                                </tr>
+                                <template x-for="(tg, idx) in (formData.tendon_groups || [])" :key="idx">
+                                    <tr>
+                                        <td class="p-1 border font-bold text-purple-900" x-text="tg.name"></td>
+                                        <td class="p-1 border"><input type="number" x-model.number="tg.num_tendons" class="w-14 border rounded text-center font-bold"></td>
+                                        <td class="p-1 border"><input type="number" x-model.number="tg.strands_per_tendon" class="w-14 border rounded text-center"></td>
+                                        <td class="p-1 border"><input type="number" x-model.number="tg.strand_area" class="w-14 border rounded text-center"></td>
+                                        <td class="p-1 border"><input type="number" x-model.number="tg.eccentricity_mid" class="w-20 border rounded text-center font-bold"></td>
+                                        <td class="p-1 border">
+                                            <select x-model.number="tg.tension_stage" class="border rounded p-0.5 font-bold">
+                                                <option value="1">Stage 1 (Đợt 1)</option>
+                                                <option value="3">Stage 3 (Đợt 2)</option>
+                                                <option value="0">0 (Không dùng)</option>
+                                            </select>
+                                        </td>
+                                    </tr>
+                                </template>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB 5: BỐ TRÍ & TỌA ĐỘ TỪNG CỌC -->
+                <div x-show="activeTab === 'piles_table'" class="p-4 space-y-3 text-xs">
+                    <div class="flex justify-between items-center">
+                        <h4 class="font-bold text-blue-900">Quản Lý Tọa Độ Từng Cọc Móng Trong Đài Bệ</h4>
+                        <button @click="addCustomPile()" class="bg-blue-600 hover:bg-blue-500 text-white px-2.5 py-1 rounded text-xs font-bold shadow flex items-center gap-1">
+                            + Thêm Cọc Mới
+                        </button>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-slate-600 mb-1">Đường kính cọc D (m)</label>
+                            <input type="number" step="0.1" x-model.number="formData.pile_diameter" class="w-full border border-slate-300 rounded p-1.5 font-bold">
+                        </div>
+                        <div>
+                            <label class="block text-slate-600 mb-1">Sức chịu tải cho phép Pcp (kN)</label>
+                            <input type="number" step="100" x-model.number="formData.pile_capacity_allowable" class="w-full border border-slate-300 rounded p-1.5 font-bold text-emerald-700">
+                        </div>
+                    </div>
+
+                    <div class="border-t border-slate-200 pt-2">
+                        <div class="flex justify-between items-center mb-1">
+                            <span class="font-bold text-slate-700">Danh Sách Toàn Bộ Tọa Độ Từng Cọc:</span>
+                            <button @click="generateGridPiles()" class="text-blue-600 hover:underline font-bold text-[11px]">
+                                🔄 Sinh lại lưới tọa độ từ hàng cọc
+                            </button>
+                        </div>
+                        <div class="max-h-56 overflow-y-auto border border-slate-200 rounded">
+                            <table class="w-full border-collapse text-center">
+                                <thead class="bg-slate-100 font-bold sticky top-0">
+                                    <tr>
+                                        <th class="p-1.5 border">Cọc ID</th>
+                                        <th class="p-1.5 border">Tọa độ X (dọc m)</th>
+                                        <th class="p-1.5 border">Tọa độ Y (ngang m)</th>
+                                        <th class="p-1.5 border">Thao tác</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <template x-for="(p, p_idx) in getActivePilesList()" :key="p.id || p_idx">
+                                        <tr class="hover:bg-blue-50/50">
+                                            <td class="p-1 border font-bold text-blue-900" x-text="p.id"></td>
+                                            <td class="p-1 border">
+                                                <input type="number" step="0.05" x-model.number="p.x" class="w-24 border rounded text-center font-bold">
+                                            </td>
+                                            <td class="p-1 border">
+                                                <input type="number" step="0.05" x-model.number="p.y" class="w-24 border rounded text-center font-bold">
+                                            </td>
+                                            <td class="p-1 border">
+                                                <button @click="removeCustomPile(p_idx)" class="text-rose-600 hover:text-rose-800 font-bold px-2 py-0.5 rounded">
+                                                    ✕ Xóa
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    </template>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB 6: TẢI TRỌNG & KHÍ HẬU & VA TÀU -->
+                <div x-show="activeTab === 'loads_env'" class="p-4 space-y-3 text-xs">
+                    <h4 class="font-bold text-blue-900">Vùng Gió & Động Đất</h4>
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                        <div>
+                            <label class="block text-slate-600 mb-1">Vùng gió</label>
+                            <select x-model="formData.wind_zone" class="w-full border border-slate-300 rounded p-1.5 bg-white font-bold">
+                                <option value="I">Vùng I (38 m/s)</option>
+                                <option value="II">Vùng II (45 m/s)</option>
+                                <option value="III">Vùng III (53 m/s)</option>
+                                <option value="IV">Vùng IV (59 m/s)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-slate-600 mb-1">Địa hình</label>
+                            <select x-model.number="formData.terrain_type" class="w-full border border-slate-300 rounded p-1.5 bg-white">
+                                <option value="1">1: Lộ thiên / Sông nước</option>
+                                <option value="2">2: Đồi núi / Nhà ≤10m</option>
+                                <option value="3">3: Đô thị cao tầng</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-slate-600 mb-1">Gia tốc A (Động đất)</label>
+                            <input type="number" step="0.01" x-model.number="formData.accel_A" class="w-full border border-slate-300 rounded p-1.5 font-bold">
+                        </div>
+                        <div>
+                            <label class="block text-slate-600 mb-1">Loại đất động đất</label>
+                            <select x-model="formData.soil_type" class="w-full border border-slate-300 rounded p-1.5 bg-white">
+                                <option value="I">Đất I (S=1.0)</option>
+                                <option value="II">Đất II (S=1.2)</option>
+                                <option value="III">Đất III (S=1.5)</option>
+                                <option value="IV">Đất IV (S=2.0)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <template x-if="currentModule === 'pier'">
+                        <div class="border-t border-slate-200 pt-2">
+                            <h4 class="font-bold text-blue-900 mb-2">Tải Trọng Va Xe & Va Tàu Thủy (CV)</h4>
+                            <div class="grid grid-cols-2 gap-3">
+                                <div class="bg-slate-50 p-2 rounded border border-slate-200">
+                                    <div class="font-bold text-slate-700 mb-1">Va xe ô tô (CT):</div>
+                                    <label class="block text-slate-600">Lực CT (kN)</label>
+                                    <input type="number" step="100" x-model.number="formData.CT" class="w-full border border-slate-300 rounded p-1 font-bold text-rose-700">
+                                </div>
+                                <div class="bg-blue-50 p-2 rounded border border-blue-200">
+                                    <div class="font-bold text-blue-900 mb-1">Va tàu thủy (CV - ĐB III):</div>
+                                    <label class="block text-slate-600">Lực CV (kN)</label>
+                                    <input type="number" step="100" x-model.number="formData.CV" class="w-full border border-blue-300 rounded p-1 font-bold text-blue-700">
+                                </div>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- RIGHT COLUMN: RESULTS DASHBOARD & 7-STAGE PT TABLE (5 COLS) -->
+        <section class="lg:col-span-5 flex flex-col gap-4">
+            
+            <!-- RESULT STATUS & DOWNLOADS -->
+            <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4">
+                <div class="flex items-center justify-between mb-3">
+                    <h2 class="text-sm font-black text-slate-800 uppercase tracking-wide">📊 BẢNG TỔNG HỢP KIỂM TOÁN CHI TIẾT</h2>
+                    <template x-if="calcResult">
+                        <span :class="calcResult.success ? 'bg-emerald-100 text-emerald-800 border-emerald-300' : 'bg-rose-100 text-rose-800 border-rose-300'" class="px-3 py-0.5 rounded-full text-xs font-black border">
+                            <span x-text="calcResult.success ? '✓ ĐẠT TOÀN BỘ' : '⚠ CẦN ĐIỀU CHỈNH'"></span>
+                        </span>
+                    </template>
+                </div>
+
+                <!-- SUB-RESULT TABS -->
+                <div class="flex border-b border-slate-200 mb-3 text-xs overflow-x-auto">
+                    <button @click="resTab = 'summary'" :class="resTab === 'summary' ? 'border-b-2 border-blue-600 text-blue-700 font-bold' : 'text-slate-500'" class="pb-1.5 px-2.5 whitespace-nowrap">Tổng hợp duyệt</button>
+                    <button @click="resTab = 'shear_crack'" :class="resTab === 'shear_crack' ? 'border-b-2 border-blue-600 text-blue-700 font-bold' : 'text-slate-500'" class="pb-1.5 px-2.5 whitespace-nowrap">Cắt & Nứt</button>
+                    <template x-if="currentModule === 'pier' && formData.cap_type === 'PT'">
+                        <button @click="resTab = 'stages'" :class="resTab === 'stages' ? 'border-b-2 border-purple-600 text-purple-700 font-bold' : 'text-slate-500'" class="pb-1.5 px-2.5 whitespace-nowrap">7 Giai đoạn DƯL</button>
+                    </template>
+                    <button @click="resTab = 'pm_chart'" :class="resTab === 'pm_chart' ? 'border-b-2 border-blue-600 text-blue-700 font-bold' : 'text-slate-500'" class="pb-1.5 px-2.5 whitespace-nowrap" x-show="currentModule === 'pier'">Biểu đồ P-M</button>
+                </div>
+
+                <!-- TAB: SUMMARY CHECKS (UỐN & CỌC) -->
+                <div x-show="resTab === 'summary' && calcResult" class="space-y-1.5 text-xs">
+                    <template x-if="currentModule === 'abutment'">
+                        <div class="space-y-1.5">
+                            <div class="flex justify-between p-2 rounded bg-slate-50 border border-slate-200">
+                                <span>1. Thân mố: Uốn Mr:</span>
+                                <span :class="calcResult.summary.stem_flexure.pass ? 'text-emerald-700 font-bold' : 'text-rose-700 font-bold'" x-text="calcResult.summary.stem_flexure.pass ? 'ĐẠT (Mr=' + calcResult.summary.stem_flexure.Mr.toFixed(0) + ' kNm)' : 'KHÔNG ĐẠT (Mu=' + calcResult.summary.stem_flexure.Mu.toFixed(0) + ' kNm)'"></span>
+                            </div>
+                            <div class="flex justify-between p-2 rounded bg-slate-50 border border-slate-200">
+                                <span>2. Tường đỉnh mố: Uốn Mr:</span>
+                                <span :class="calcResult.summary.backwall_flexure.pass ? 'text-emerald-700 font-bold' : 'text-rose-700 font-bold'" x-text="calcResult.summary.backwall_flexure.pass ? 'ĐẠT (Mr=' + calcResult.summary.backwall_flexure.Mr.toFixed(0) + ' kNm)' : 'KHÔNG ĐẠT'"></span>
+                            </div>
+                            <div class="flex justify-between p-2 rounded bg-slate-50 border border-slate-200">
+                                <span>3a. Cánh - Ngàm đứng vào thân:</span>
+                                <span :class="calcResult.summary.wing_vert.pass ? 'text-emerald-700 font-bold' : 'text-rose-700 font-bold'" x-text="calcResult.summary.wing_vert.pass ? 'ĐẠT (Mr=' + calcResult.summary.wing_vert.Mr.toFixed(0) + ' kNm)' : 'KHÔNG ĐẠT (Mu=' + calcResult.summary.wing_vert.Mu.toFixed(0) + ' kNm)'"></span>
+                            </div>
+                            <div class="flex justify-between p-2 rounded bg-slate-50 border border-slate-200">
+                                <span>3b. Cánh - Ngàm đáy vào bệ:</span>
+                                <span :class="calcResult.summary.wing_bot.pass ? 'text-emerald-700 font-bold' : 'text-rose-700 font-bold'" x-text="calcResult.summary.wing_bot.pass ? 'ĐẠT (Mr=' + calcResult.summary.wing_bot.Mr.toFixed(0) + ' kNm)' : 'KHÔNG ĐẠT (Mu=' + calcResult.summary.wing_bot.Mu.toFixed(0) + ' kNm)'"></span>
+                            </div>
+                            <div class="flex justify-between p-2 rounded bg-slate-50 border border-slate-200">
+                                <span>4a. Bệ mố Mũi bệ (Toe):</span>
+                                <span :class="calcResult.summary.footing_front.pass ? 'text-emerald-700 font-bold' : 'text-rose-700 font-bold'" x-text="calcResult.summary.footing_front.pass ? 'ĐẠT (Mr=' + calcResult.summary.footing_front.Mr.toFixed(0) + ' kNm)' : 'KHÔNG ĐẠT'"></span>
+                            </div>
+                            <div class="flex justify-between p-2 rounded bg-slate-50 border border-slate-200">
+                                <span>4b. Bệ mố Gót bệ (Heel):</span>
+                                <span :class="calcResult.summary.footing_rear.pass ? 'text-emerald-700 font-bold' : 'text-rose-700 font-bold'" x-text="calcResult.summary.footing_rear.pass ? 'ĐẠT (Mr=' + calcResult.summary.footing_rear.Mr.toFixed(0) + ' kNm)' : 'KHÔNG ĐẠT'"></span>
+                            </div>
+                            <div class="flex justify-between p-2 rounded bg-slate-50 border border-slate-200">
+                                <span>5a. Cọc - TTGH Sử dụng (SLS):</span>
+                                <span :class="calcResult.summary.pile_capacity_service.pass ? 'text-emerald-700 font-bold' : 'text-rose-700 font-bold'" x-text="calcResult.summary.pile_capacity_service.Pmax.toFixed(0) + ' / ' + calcResult.summary.pile_capacity_service.Pcp + ' kN (' + (calcResult.summary.pile_capacity_service.pass ? 'ĐẠT' : 'VƯỢT TẢI') + ')'"></span>
+                            </div>
+                            <div class="flex justify-between p-2 rounded bg-slate-50 border border-slate-200">
+                                <span>5b. Cọc - TTGH Cường độ (ULS):</span>
+                                <span :class="calcResult.summary.pile_capacity_strength.pass ? 'text-emerald-700 font-bold' : 'text-rose-700 font-bold'" x-text="calcResult.summary.pile_capacity_strength.Pmax.toFixed(0) + ' / ' + calcResult.summary.pile_capacity_strength.Pgh.toFixed(0) + ' kN (' + (calcResult.summary.pile_capacity_strength.pass ? 'ĐẠT' : 'VƯỢT TẢI') + ')'"></span>
+                            </div>
+                        </div>
+                    </template>
+
+                    <template x-if="currentModule === 'pier'">
+                        <div class="space-y-1.5">
+                            <div class="flex justify-between p-2 rounded bg-slate-50 border border-slate-200">
+                                <span>1. Thân trụ (P-M-M Fiber):</span>
+                                <span :class="calcResult.summary.stem_pm.pass ? 'text-emerald-700 font-bold' : 'text-rose-700 font-bold'" x-text="calcResult.summary.stem_pm.pass ? 'ĐẠT (D/C=' + calcResult.summary.stem_pm.utilization.toFixed(2) + ')' : 'KHÔNG ĐẠT'"></span>
+                            </div>
+                            <div class="flex justify-between p-2 rounded bg-slate-50 border border-slate-200">
+                                <span>2. Xà mũ (<span x-text="calcResult.cap_type"></span>):</span>
+                                <span :class="calcResult.summary.cap_flexure.pass ? 'text-emerald-700 font-bold' : 'text-rose-700 font-bold'" x-text="calcResult.summary.cap_flexure.pass ? 'ĐẠT' : 'KHÔNG ĐẠT'"></span>
+                            </div>
+                            <div class="flex justify-between p-2 rounded bg-slate-50 border border-slate-200">
+                                <span>3. Bệ trụ (2 phương):</span>
+                                <span :class="calcResult.summary.footing_flexure.pass ? 'text-emerald-700 font-bold' : 'text-rose-700 font-bold'" x-text="calcResult.summary.footing_flexure.pass ? 'ĐẠT' : 'KHÔNG ĐẠT'"></span>
+                            </div>
+                            <div class="flex justify-between p-2 rounded bg-slate-50 border border-slate-200">
+                                <span>4. Sức chịu tải cọc Pmax:</span>
+                                <span :class="calcResult.summary.pile_capacity.pass ? 'text-emerald-700 font-bold' : 'text-rose-700 font-bold'" x-text="calcResult.summary.pile_capacity.Pmax.toFixed(0) + ' / ' + calcResult.summary.pile_capacity.Pcp + ' kN'"></span>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+
+                <!-- TAB: KIỂM TOÁN CẮT & NỨT CHI TIẾT (SHEAR & CRACKING) -->
+                <div x-show="resTab === 'shear_crack' && calcResult" class="space-y-1.5 text-xs">
+                    <template x-if="currentModule === 'abutment'">
+                        <div class="space-y-1.5">
+                            <div class="flex justify-between p-2 rounded bg-slate-50 border border-slate-200">
+                                <span>Thân mố: Cắt Vr / Nứt fss:</span>
+                                <span :class="calcResult.summary.stem_shear.pass && calcResult.summary.stem_crack.pass ? 'text-emerald-700 font-bold' : 'text-rose-700 font-bold'" x-text="'Vr=' + calcResult.summary.stem_shear.Vr.toFixed(0) + ' kN | fss=' + calcResult.summary.stem_crack.fss.toFixed(1) + ' MPa'"></span>
+                            </div>
+                            <div class="flex justify-between p-2 rounded bg-slate-50 border border-slate-200">
+                                <span>Tường đỉnh: Cắt / Nứt:</span>
+                                <span :class="calcResult.summary.backwall_shear.pass && calcResult.summary.backwall_crack.pass ? 'text-emerald-700 font-bold' : 'text-rose-700 font-bold'" x-text="'Vr=' + calcResult.summary.backwall_shear.Vr.toFixed(0) + ' kN | fss=' + calcResult.summary.backwall_crack.fss.toFixed(1) + ' MPa'"></span>
+                            </div>
+                            <div class="flex justify-between p-2 rounded bg-slate-50 border border-slate-200">
+                                <span>Tường cánh: Cắt / Nứt:</span>
+                                <span :class="calcResult.summary.wing_shear.pass && calcResult.summary.wing_crack.pass ? 'text-emerald-700 font-bold' : 'text-rose-700 font-bold'" x-text="'Vr=' + calcResult.summary.wing_shear.Vr.toFixed(0) + ' kN | fss=' + calcResult.summary.wing_crack.fss.toFixed(1) + ' MPa'"></span>
+                            </div>
+                            <div class="flex justify-between p-2 rounded bg-slate-50 border border-slate-200">
+                                <span>Bệ mố: Cắt dầm & Đâm thủng:</span>
+                                <span :class="calcResult.summary.footing_shear.pass && calcResult.summary.footing_punching.pass ? 'text-emerald-700 font-bold' : 'text-rose-700 font-bold'" x-text="calcResult.summary.footing_punching.pass ? 'ĐẠT (Đâm thủng Vr=' + calcResult.summary.footing_punching.Vr.toFixed(0) + ' kN)' : 'KHÔNG ĐẠT'"></span>
+                            </div>
+                        </div>
+                    </template>
+
+                    <template x-if="currentModule === 'pier'">
+                        <div class="space-y-1.5">
+                            <div class="flex justify-between p-2 rounded bg-slate-50 border border-slate-200">
+                                <span>Thân trụ: Cắt Vr / Nứt fss:</span>
+                                <span :class="calcResult.summary.stem_shear.pass && calcResult.summary.stem_crack.pass ? 'text-emerald-700 font-bold' : 'text-rose-700 font-bold'" x-text="'Vr=' + calcResult.summary.stem_shear.Vr.toFixed(0) + ' kN | fss=' + calcResult.summary.stem_crack.fss.toFixed(1) + ' MPa'"></span>
+                            </div>
+                            <div class="flex justify-between p-2 rounded bg-slate-50 border border-slate-200">
+                                <span>Xà mũ: Cắt / Nứt:</span>
+                                <span :class="calcResult.summary.cap_shear.pass && calcResult.summary.cap_crack.pass ? 'text-emerald-700 font-bold' : 'text-rose-700 font-bold'" x-text="'Vr=' + calcResult.summary.cap_shear.Vr.toFixed(0) + ' kN | fss=' + calcResult.summary.cap_crack.fss.toFixed(1) + ' MPa'"></span>
+                            </div>
+                            <div class="flex justify-between p-2 rounded bg-slate-50 border border-slate-200">
+                                <span>Bệ trụ: Cắt & Đâm thủng:</span>
+                                <span :class="calcResult.summary.footing_shear.pass && calcResult.summary.footing_punching.pass ? 'text-emerald-700 font-bold' : 'text-rose-700 font-bold'" x-text="calcResult.summary.footing_punching.pass ? 'ĐẠT (Đâm thủng Vr=' + calcResult.summary.footing_punching.Vr.toFixed(0) + ' kN)' : 'KHÔNG ĐẠT'"></span>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+
+                <!-- TAB: 7 GIAI ĐOẠN THI CÔNG XÀ MŨ DƯL -->
+                <div x-show="resTab === 'stages' && calcResult && calcResult.pt_stages" class="text-[11px]">
+                    <div class="overflow-x-auto border border-purple-200 rounded">
+                        <table class="w-full border-collapse text-center">
+                            <thead class="bg-purple-100 text-purple-950 font-bold">
+                                <tr>
+                                    <th class="p-1 border">Giai đoạn thi công</th>
+                                    <th class="p-1 border">M_ext (kNm)</th>
+                                    <th class="p-1 border">σ_top (MPa)</th>
+                                    <th class="p-1 border">σ_bot (MPa)</th>
+                                    <th class="p-1 border">Kết luận</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <template x-for="st in (calcResult.pt_stages || [])" :key="st.stage_id">
+                                    <tr class="hover:bg-purple-50">
+                                        <td class="p-1 border font-bold text-left text-purple-900" x-text="st.stage_name"></td>
+                                        <td class="p-1 border" x-text="st.M_ext"></td>
+                                        <td class="p-1 border font-bold" :class="st.sigma_top >= 0 ? 'text-blue-700' : 'text-rose-700'" x-text="st.sigma_top"></td>
+                                        <td class="p-1 border font-bold" :class="st.sigma_bot >= 0 ? 'text-blue-700' : 'text-rose-700'" x-text="st.sigma_bot"></td>
+                                        <td class="p-1 border font-black" :class="st.passed ? 'text-emerald-700' : 'text-rose-700'" x-text="st.passed ? 'ĐẠT' : 'K.ĐẠT'"></td>
+                                    </tr>
+                                </template>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- TAB: P-M CHART (PIER) -->
+                <div x-show="resTab === 'pm_chart' && currentModule === 'pier'" class="pt-2">
+                    <div class="relative h-56 w-full">
+                        <canvas id="pmChartCanvas"></canvas>
+                    </div>
+                </div>
+
+                <!-- DOWNLOAD BUTTONS -->
+                <div class="mt-4 pt-3 border-t border-slate-200 flex flex-wrap gap-2" x-show="calcResult">
+                    <a :href="calcResult.reports.docx" download class="flex-1 bg-blue-700 hover:bg-blue-600 text-white text-center py-2 px-3 rounded-lg text-xs font-bold shadow transition flex items-center justify-center gap-1">
+                        📄 Xuất Word (.docx)
+                    </a>
+                    <a :href="calcResult.reports.html" target="_blank" class="flex-1 bg-amber-600 hover:bg-amber-500 text-white text-center py-2 px-3 rounded-lg text-xs font-bold shadow transition flex items-center justify-center gap-1">
+                        🌐 Báo Cáo HTML
+                    </a>
+                    <a :href="calcResult.reports.pdf" download class="flex-1 bg-rose-700 hover:bg-rose-600 text-white text-center py-2 px-3 rounded-lg text-xs font-bold shadow transition flex items-center justify-center gap-1">
+                        📑 Xuất PDF
+                    </a>
+                </div>
+            </div>
+
+        </section>
+
+    </main>
+
+    <!-- ALPINE CLIENT SCRIPT -->
+    <script>
+        function bridgeApp() {
+            return {
+                currentModule: 'abutment',
+                activeTab: 'geometry',
+                svgView: 'elevation',
+                resTab: 'summary',
+                formData: {},
+                calcResult: null,
+                isLoading: false,
+                chartInstance: null,
+
+                async initApp() {
+                    await this.loadPreset('default_abutment');
+                    await this.runCalculation();
+                },
+
+                async switchModule(mod) {
+                    this.currentModule = mod;
+                    if (mod === 'abutment') {
+                        await this.loadPreset('default_abutment');
+                    } else {
+                        await this.loadPreset('default_pier_rc');
+                    }
+                    await this.runCalculation();
+                },
+
+                async loadPreset(presetName) {
+                    try {
+                        const res = await fetch(`/api/presets/${presetName}`);
+                        if (res.ok) {
+                            this.formData = await res.json();
+                            if (presetName.includes('abutment')) {
+                                this.currentModule = 'abutment';
+                            } else {
+                                this.currentModule = 'pier';
+                            }
+                        }
+                    } catch (e) {
+                        console.error('Error loading preset:', e);
+                    }
+                },
+
+                getActivePilesList() {
+                    if (this.formData.custom_piles && this.formData.custom_piles.length > 0) {
+                        return this.formData.custom_piles;
+                    }
+                    const list = [];
+                    let pid = 1;
+                    const rows = this.formData.pile_rows || [];
+                    for (const r of rows) {
+                        const cnt = r.count || 0;
+                        const sp = r.spacing || 1.0;
+                        const rx = r.x || 0.0;
+                        const totW = (cnt - 1) * sp;
+                        const startY = -totW / 2.0;
+                        for (let j = 0; j < cnt; j++) {
+                            list.push({ id: pid++, x: rx, y: parseFloat((startY + j * sp).toFixed(2)) });
+                        }
+                    }
+                    return list;
+                },
+
+                getPlanFootingPolygon() {
+                    const B1 = this.formData.B1 || this.formData.Bbe || 6.0;
+                    const C1 = this.formData.C1 || this.formData.Cbe || 23.55;
+                    const alphaDeg = this.formData.skew_angle || 90.0;
+                    const alphaRad = (alphaDeg * Math.PI) / 180.0;
+                    const tanA = Math.tan(alphaRad);
+
+                    const scaleX = 18.0;
+                    const scaleY = 7.5;
+
+                    const wPx = B1 * scaleX;
+                    const lPx = C1 * scaleY;
+                    const shiftX = tanA !== 0 ? (lPx / (2.0 * tanA)) : 0;
+
+                    const cx = 245, cy = 140;
+                    const x1 = cx - wPx/2.0 + shiftX, y1 = cy - lPx/2.0;
+                    const x2 = cx + wPx/2.0 + shiftX, y2 = cy - lPx/2.0;
+                    const x3 = cx + wPx/2.0 - shiftX, y3 = cy + lPx/2.0;
+                    const x4 = cx - wPx/2.0 - shiftX, y4 = cy + lPx/2.0;
+
+                    return `${x1.toFixed(1)},${y1.toFixed(1)} ${x2.toFixed(1)},${y2.toFixed(1)} ${x3.toFixed(1)},${y3.toFixed(1)} ${x4.toFixed(1)},${y4.toFixed(1)}`;
+                },
+
+                getPlanStemPolygon() {
+                    const B1 = this.formData.B1 || this.formData.Bbe || 6.0;
+                    const B3 = this.formData.B3 || this.formData.hth1 || 1.3;
+                    const B4 = this.formData.B4 || 0.0;
+                    const C1 = this.formData.C1 || this.formData.Cbe || 23.55;
+                    const C3 = this.formData.C3 || 0.5;
+                    const alphaDeg = this.formData.skew_angle || 90.0;
+                    const alphaRad = (alphaDeg * Math.PI) / 180.0;
+                    const tanA = Math.tan(alphaRad);
+
+                    const scaleX = 18.0;
+                    const scaleY = 7.5;
+
+                    const stemCenterRelX = (B1/2.0 - B4 - B3/2.0);
+                    const stemLen = Math.max(2.0, C1 - 2.0 * C3);
+
+                    const wPx = B3 * scaleX;
+                    const lPx = stemLen * scaleY;
+                    const shiftX = tanA !== 0 ? (lPx / (2.0 * tanA)) : 0;
+
+                    const cx = 245 + stemCenterRelX * scaleX;
+                    const cy = 140;
+
+                    const x1 = cx - wPx/2.0 + shiftX, y1 = cy - lPx/2.0;
+                    const x2 = cx + wPx/2.0 + shiftX, y2 = cy - lPx/2.0;
+                    const x3 = cx + wPx/2.0 - shiftX, y3 = cy + lPx/2.0;
+                    const x4 = cx - wPx/2.0 - shiftX, y4 = cy + lPx/2.0;
+
+                    return `${x1.toFixed(1)},${y1.toFixed(1)} ${x2.toFixed(1)},${y2.toFixed(1)} ${x3.toFixed(1)},${y3.toFixed(1)} ${x4.toFixed(1)},${y4.toFixed(1)}`;
+                },
+
+                renderPilesSvgString() {
+                    const alphaDeg = this.formData.skew_angle || 90.0;
+                    const alphaRad = (alphaDeg * Math.PI) / 180.0;
+                    const tanA = Math.tan(alphaRad);
+
+                    const scaleX = 18.0;
+                    const scaleY = 7.5;
+                    const D = this.formData.pile_diameter || 1.2;
+                    const rPx = Math.max(7, D * scaleX * 0.45);
+
+                    const piles = this.getActivePilesList();
+                    let svgStr = '';
+
+                    for (const p of piles) {
+                        const shiftX = tanA !== 0 ? ((p.y * scaleY) / tanA) : 0;
+                        const cx = (245 + p.x * scaleX - shiftX).toFixed(1);
+                        const cy = (140 + p.y * scaleY).toFixed(1);
+                        svgStr += `<g>
+                            <circle cx="${cx}" cy="${cy}" r="${rPx}" fill="#2563eb" stroke="#1e3a8a" stroke-width="1.5" />
+                            <line x1="${cx - 4}" y1="${cy}" x2="${cx + 4}" y2="${cy}" stroke="#ffffff" stroke-width="1" />
+                            <line x1="${cx}" y1="${cy - 4}" x2="${cx}" y2="${cy + 4}" stroke="#ffffff" stroke-width="1" />
+                            <text x="${cx}" y="${parseFloat(cy) + 3}" fill="#ffffff" font-size="7.5" font-weight="bold" text-anchor="middle">${p.id}</text>
+                        </g>`;
+                    }
+                    return svgStr;
+                },
+
+                addCustomPile() {
+                    if (!this.formData.custom_piles || this.formData.custom_piles.length === 0) {
+                        this.formData.custom_piles = this.getActivePilesList();
+                    }
+                    const newId = this.formData.custom_piles.length + 1;
+                    this.formData.custom_piles.push({ id: newId, x: 0.0, y: 0.0 });
+                },
+
+                removeCustomPile(idx) {
+                    if (!this.formData.custom_piles || this.formData.custom_piles.length === 0) {
+                        this.formData.custom_piles = this.getActivePilesList();
+                    }
+                    this.formData.custom_piles.splice(idx, 1);
+                },
+
+                generateGridPiles() {
+                    this.formData.custom_piles = [];
+                    this.formData.custom_piles = this.getActivePilesList();
+                },
+
+                async runCalculation() {
+                    this.isLoading = true;
+                    try {
+                        const url = this.currentModule === 'abutment' ? '/api/calculate/abutment' : '/api/calculate/pier';
+                        const res = await fetch(url, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(this.formData)
+                        });
+                        if (res.ok) {
+                            this.calcResult = await res.json();
+                            if (this.currentModule === 'pier' && this.calcResult.pm_curve) {
+                                this.$nextTick(() => {
+                                    this.renderPMChart();
+                                });
+                            }
+                        }
+                    } catch (e) {
+                        console.error('Calculation error:', e);
+                    } finally {
+                        this.isLoading = false;
+                    }
+                },
+
+                renderPMChart() {
+                    const ctx = document.getElementById('pmChartCanvas');
+                    if (!ctx) return;
+
+                    const curve = this.calcResult.pm_curve || [];
+                    const demand = this.calcResult.demand_point || { Pu: 0, Muy: 0 };
+
+                    const dataPts = curve.map(pt => ({ x: pt.phiMn, y: pt.phiPn }));
+                    const demandPt = [{ x: demand.Muy, y: demand.Pu }];
+
+                    if (this.chartInstance) {
+                        this.chartInstance.destroy();
+                    }
+
+                    this.chartInstance = new Chart(ctx, {
+                        type: 'scatter',
+                        data: {
+                            datasets: [
+                                {
+                                    label: 'Sức kháng φPn - φMn (Fiber)',
+                                    data: dataPts,
+                                    showLine: true,
+                                    borderColor: '#2563eb',
+                                    backgroundColor: 'rgba(37, 99, 235, 0.08)',
+                                    borderWidth: 2.5,
+                                    pointRadius: 0
+                                },
+                                {
+                                    label: 'Điểm thiết kế (Muy, Pu)',
+                                    data: demandPt,
+                                    backgroundColor: '#ef4444',
+                                    borderColor: '#991b1b',
+                                    pointRadius: 6,
+                                    pointHoverRadius: 8
+                                }
+                            ]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            scales: {
+                                x: { title: { display: true, text: 'φMn (kNm)', font: { size: 10 } } },
+                                y: { title: { display: true, text: 'φPn (kN)', font: { size: 10 } } }
+                            },
+                            plugins: {
+                                legend: { labels: { boxWidth: 10, font: { size: 10 } } }
+                            }
+                        }
+                    });
+                },
+
+                exportJSON() {
+                    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(this.formData, null, 2));
+                    const dlAnchorElem = document.createElement('a');
+                    dlAnchorElem.setAttribute("href", dataStr);
+                    dlAnchorElem.setAttribute("download", `${this.formData.abutment_name || this.formData.pier_name || 'du_an'}.json`);
+                    dlAnchorElem.click();
+                },
+
+                importJSON(event) {
+                    const file = event.target.files[0];
+                    if (!file) return;
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        try {
+                            this.formData = JSON.parse(e.target.result);
+                            if (this.formData.abutment_name) {
+                                this.currentModule = 'abutment';
+                            } else if (this.formData.pier_name) {
+                                this.currentModule = 'pier';
+                            }
+                            this.runCalculation();
+                        } catch (err) {
+                            alert('File JSON không hợp lệ!');
+                        }
+                    };
+                    reader.readAsText(file);
+                }
+            };
+        }
+    </script>
+</body>
+</html>

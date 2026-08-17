@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Thuyết Minh Tính Toán Trụ Cầu - Trụ T1</title>
+    <style>
+        body { font-family: 'Segoe UI', Arial, sans-serif; background: #f1f5f9; color: #0f172a; line-height: 1.6; margin: 0; padding: 24px; }
+        .container { max-width: 1150px; margin: 0 auto; background: #fff; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.06); padding: 40px; }
+        .header { border-bottom: 2px solid #cbd5e1; padding-bottom: 20px; margin-bottom: 28px; display: flex; justify-content: space-between; align-items: center; }
+        h1 { color: #1e3a8a; font-size: 24px; margin: 0 0 6px 0; }
+        h2 { color: #1e40af; font-size: 17px; border-left: 4px solid #2563eb; padding-left: 12px; margin: 30px 0 16px 0; background: #f8fafc; padding-top: 6px; padding-bottom: 6px; }
+        h3 { color: #0f172a; font-size: 14.5px; margin: 18px 0 8px 0; font-weight: bold; }
+        table { width: 100%; border-collapse: collapse; margin: 12px 0 20px 0; font-size: 13px; }
+        th { background: #1e3a8a; color: #fff; text-align: left; padding: 9px 12px; font-weight: 600; border: 1px solid #cbd5e1; }
+        td { padding: 8px 12px; border: 1px solid #e2e8f0; }
+        tr:nth-child(even) td { background: #f8fafc; }
+        .pass { color: #16a34a; font-weight: bold; }
+        .fail { color: #dc2626; font-weight: bold; }
+        .formula { background: #f8fafc; border-left: 3px solid #3b82f6; padding: 8px 12px; font-family: 'Consolas', 'Courier New', monospace; font-size: 12.5px; margin: 8px 0; color: #1e293b; }
+        .btn-print { background: #2563eb; color: #fff; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: bold; }
+        .card { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px; margin-bottom: 16px; }
+        @media print {
+            body { padding: 0; background: #fff; }
+            .container { box-shadow: none; padding: 0; max-width: 100%; }
+            .btn-print { display: none; }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+
+    <div class="header">
+        <div>
+            <h1>THUYẾT MINH TÍNH TOÁN KẾT CẤU TRỤ CẦU</h1>
+            <div style="color: #475569; font-size: 14px;">Dự án: <strong>Cầu Km19+000</strong> | Hạng mục: <strong>Trụ T1</strong> | <strong>Trụ 1 Thân Đơn</strong> | <strong>Xà Mũ Bê Tông Cốt Thép Thường (RC)</strong></div>
+        </div>
+        <div style="text-align: right;">
+            <span style="background:#dc2626; color:#fff; padding:6px 16px; border-radius:999px; font-weight:bold; font-size:14px;">⚠ CẦN ĐIỀU CHỈNH THIẾT KẾ</span><br>
+            <button class="btn-print" onclick="window.print()" style="margin-top: 10px;">🖨️ In Báo Cáo / Xuất PDF</button>
+        </div>
+    </div>
+
+    <!-- CHƯƠNG I: TỔNG HỢP KIỂM TOÁN -->
+    <h2>CHƯƠNG I. TỔNG HỢP KẾT QUẢ KIỂM TOÁN CÁC HẠNG MỤC TRỤ</h2>
+    <table>
+        <tr>
+            <th>Cấu kiện</th>
+            <th>Nội dung kiểm toán</th>
+            <th>Nội lực tính toán</th>
+            <th>Sức kháng / Cho phép</th>
+            <th>Tỷ số D/C</th>
+            <th>Dẫn chứng TCVN</th>
+            <th>Kết luận</th>
+        </tr>
+        <tr>
+            <td rowspan="3" style="font-weight:bold;">1. Thân trụ</td>
+            <td>Tương tác P-Mx-My (Fiber)</td>
+            <td>Pu = 31740.4 kN</td>
+            <td>Biểu đồ P-M TCVN</td>
+            <td>0.58</td>
+            <td>TCVN 11823-5 Điều 5.7.4</td>
+            <td class="pass">ĐẠT</td>
+        </tr>
+        <tr>
+            <td>Sức kháng cắt ULS (Vr)</td>
+            <td>Vu = 1071.9 kN</td>
+            <td>Vr = 8681.6 kN</td>
+            <td>0.12</td>
+            <td>TCVN 11823-5 Điều 5.8.3</td>
+            <td class="pass">ĐẠT</td>
+        </tr>
+        <tr>
+            <td>Kiểm soát nứt SLS (fss)</td>
+            <td>fss = 379.8 MPa</td>
+            <td>[fsa] = 240.0 MPa (s_max=96mm)</td>
+            <td>1.58</td>
+            <td>TCVN 11823-5 Điều 5.7.3.4</td>
+            <td class="fail">KHÔNG ĐẠT</td>
+        </tr>
+        <tr>
+            <td rowspan="2" style="font-weight:bold;">2. Xà mũ trụ</td>
+            <td>Sức kháng uốn ULS (Mr)</td>
+            <td>Mu = 69172.1 kNm</td>
+            <td>Mr = 99449.9 kNm</td>
+            <td>0.70</td>
+            <td>TCVN 11823-5 Điều 5.7.3.2</td>
+            <td class="pass">ĐẠT</td>
+        </tr>
+        <tr>
+            <td>Sức kháng cắt ULS (Vr)</td>
+            <td>Vu = 15441.4 kN</td>
+            <td>Vr = 25272.0 kN</td>
+            <td>0.61</td>
+            <td>TCVN 11823-5 Điều 5.8.3</td>
+            <td class="pass">ĐẠT</td>
+        </tr>
+        <tr>
+            <td rowspan="2" style="font-weight:bold;">3. Bệ trụ</td>
+            <td>Uốn phương dọc X & ngang Y</td>
+            <td>Mu = 36828.2 kNm</td>
+            <td>Mr = 39164.1 kNm</td>
+            <td>0.92</td>
+            <td>TCVN 11823-5 Điều 5.7.3.2</td>
+            <td class="fail">KHÔNG ĐẠT</td>
+        </tr>
+        <tr>
+            <td>Đâm thủng bệ trụ</td>
+            <td>Vu = 6535.5 kN</td>
+            <td>Vr = 12060.7 kN</td>
+            <td>0.54</td>
+            <td>TCVN 11823-5 Điều 5.13.3.6</td>
+            <td class="pass">ĐẠT</td>
+        </tr>
+        <tr>
+            <td rowspan="2" style="font-weight:bold;">4. Móng cọc</td>
+            <td>Sức chịu tải nén Pmax (TS_PILE)</td>
+            <td>Pmax = 4759.1 kN (SLS) / 6535.5 kN (ULS)</td>
+            <td>Pcp = 4500.0 kN (SLS) / 6300.0 kN (ULS)</td>
+            <td>1.06</td>
+            <td>TCVN 11823-10 Điều 10.7.3</td>
+            <td class="fail">KHÔNG ĐẠT</td>
+        </tr>
+        <tr>
+            <td>Kiểm tra cọc chịu nhổ</td>
+            <td>Pmin = 1409.9 kN</td>
+            <td>≥ 0.0 kN (Không nhổ)</td>
+            <td>—</td>
+            <td>TCVN 11823-10 Điều 10.7.3.7</td>
+            <td class="pass">ĐẠT</td>
+        </tr>
+    </table>
+
+    
+
+    <!-- CHƯƠNG V: KẾT LUẬN -->
+    <h2>CHƯƠNG V. KẾT LUẬN & KIẾN NGHỊ</h2>
+    <div class="card" style="font-size: 13.5px;">
+        1. Kết cấu trụ cầu <strong>Trụ T1</strong> thuộc công trình <strong>Cầu Km19+000</strong> được thiết kế theo đúng quy trình và tiêu chuẩn <strong>TCVN 11823:2017</strong>.<br>
+        2. Toàn bộ các bộ phận (Thân trụ, Xà mũ, Bệ trụ, Móng cọc) đều <strong>ĐẠT</strong> các yêu cầu về cường độ, sử dụng, nứt và phản lực cọc.<br>
+        3. Hồ sơ tính toán đủ điều kiện để triển khai bản vẽ thi công.
+    </div>
+
+</div>
+</body>
+</html>
+    

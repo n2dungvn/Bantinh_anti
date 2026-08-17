@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Báo cáo Tính toán Trụ Cầu - Trụ T1</title>
+    <style>
+        body { font-family: 'Segoe UI', Arial, sans-serif; background: #f8fafc; color: #1e293b; line-height: 1.6; margin: 0; padding: 24px; }
+        .container { max-width: 1100px; margin: 0 auto; background: #fff; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.06); padding: 36px; }
+        .header { border-bottom: 2px solid #e2e8f0; padding-bottom: 20px; margin-bottom: 24px; display: flex; justify-content: space-between; align-items: center; }
+        h1 { color: #1e3a8a; font-size: 24px; margin: 0 0 6px 0; }
+        h2 { color: #1e40af; font-size: 18px; border-left: 4px solid #3b82f6; padding-left: 10px; margin: 28px 0 16px 0; }
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 13.5px; }
+        th { background: #1e3a8a; color: #fff; text-align: left; padding: 10px 12px; font-weight: 600; }
+        td { padding: 8px 12px; border-bottom: 1px solid #e2e8f0; }
+        tr:nth-child(even) td { background: #f8fafc; }
+        .pass { color: #16a34a; font-weight: bold; }
+        .fail { color: #dc2626; font-weight: bold; }
+        .btn-print { background: #2563eb; color: #fff; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: 600; }
+        .card { background: #f1f5f9; border-radius: 8px; padding: 16px; margin-bottom: 16px; }
+        @media print {
+            body { padding: 0; background: #fff; }
+            .container { box-shadow: none; padding: 0; }
+            .btn-print { display: none; }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <div>
+            <h1>THUYẾT MINH TÍNH TOÁN KẾT CẤU TRỤ CẦU</h1>
+            <div style="color: #64748b; font-size: 14px;">Dự án: <strong>Cầu Km19+000</strong> | Hạng mục: <strong>Trụ T1</strong> | Hình thức: <strong>SINGLE</strong> | Xà mũ: <span style="background:#3b82f6; color:#fff; padding:2px 8px; border-radius:4px; font-size:11px;">RC</span></div>
+        </div>
+        <div>
+            <span style="background:#dc2626; color:#fff; padding:4px 12px; border-radius:999px; font-weight:bold;">CHƯA ĐẠT</span>
+            <button class="btn-print" onclick="window.print()" style="margin-left: 12px;">🖨️ In Báo Cáo</button>
+        </div>
+    </div>
+
+    <h2>I. TỔNG HỢP KẾT QUẢ KIỂM TOÁN</h2>
+    <table>
+        <tr><th>Hạng mục kiểm toán</th><th>Nội lực tính toán</th><th>Sức kháng / Cho phép</th><th>Tỷ số D/C</th><th>Kết luận</th></tr>
+        <tr><td>1. Thân trụ: Tương tác P-Mx-My</td><td>Pu = 31740.4 kN</td><td>Biểu đồ P-M Fiber</td><td>0.58</td><td class="pass">ĐẠT</td></tr>
+        <tr><td>2. Thân trụ: Cắt Vr</td><td>Vu = 1071.9 kN</td><td>Vr = 8681.6 kN</td><td>0.12</td><td class="pass">ĐẠT</td></tr>
+        <tr><td>3. Thân trụ: Nứt fss</td><td>fss = 379.8 MPa</td><td>fsa = 240.0 MPa</td><td>1.58</td><td class="fail">KHÔNG ĐẠT</td></tr>
+        <tr><td>4. Xà mũ: Sức kháng uốn Mr</td><td>Mu = 69172.1 kNm</td><td>Mr = 99449.9 kNm</td><td>0.70</td><td class="pass">ĐẠT</td></tr>
+        <tr><td>5. Bệ trụ: Sức kháng uốn</td><td>Muy = 35929.9 kNm</td><td>Mr = 39164.1 kNm</td><td>0.92</td><td class="pass">ĐẠT</td></tr>
+        <tr><td>6. Móng cọc: Nén Pmax</td><td>Pmax = 4714.3 kN</td><td>Pcp = 4500.0 kN</td><td>1.05</td><td class="fail">KHÔNG ĐẠT</td></tr>
+    </table>
+
+    <h2>II. BIỂU ĐỒ TƯƠNG TÁC P-M VÀ ĐIỂM THIẾT KẾ</h2>
+    <div class="grid-2">
+        <div>
+            
+    <svg width="480" height="300" viewBox="0 0 480 300" xmlns="http://www.w3.org/2000/svg" style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px;">
+        <text x="20" y="24" fill="#1e3a8a" font-size="12" font-weight="bold">BIỂU ĐỒ TƯƠNG TÁC P-M THÂN TRỤ (Phương dọc My)</text>
+        <line x1="60" y1="260" x2="440" y2="260" stroke="#94a3b8" stroke-width="1.5" />
+        <line x1="60" y1="30" x2="60" y2="260" stroke="#94a3b8" stroke-width="1.5" />
+        <text x="400" y="280" fill="#64748b" font-size="10">φMn (kNm)</text>
+        <text x="15" y="45" fill="#64748b" font-size="10">φPn (kN)</text>
+    <polyline points="60.0,260.0 146.2,260.0 223.1,258.6 288.1,243.7 337.4,230.9 357.0,224.9 391.7,213.1 420.0,198.7 412.4,194.3 414.2,184.7 412.0,175.7 404.0,172.4 396.4,160.7 384.6,147.8 373.5,140.5 355.7,128.2 333.3,116.2 317.8,109.6 289.6,98.4 256.7,87.4 236.6,81.4 198.5,71.2 156.8,61.2 136.7,56.7 93.5,48.0 91.2,47.3 89.0,46.7 87.0,46.1 85.2,45.6 83.4,45.1 81.8,44.7 60.0,40.0" fill="none" stroke="#2563eb" stroke-width="2.5" />
+        <circle cx="211.8" cy="220.8" r="5" fill="#ef4444" stroke="#991b1b" stroke-width="1.5" />
+        <text x="219.8" y="216.8" fill="#dc2626" font-size="10" font-weight="bold">Điểm thiết kế (18501 kNm, 31740 kN)</text>
+        </svg>
+        </div>
+        <div class="card">
+            <strong>Thông số kiểm toán thân trụ:</strong><br>
+            • Kích thước đáy: 5.5m (ngang) × 1.6m (dọc)<br>
+            • Diện tích mặt cắt Ag = 8.25 m²<br>
+            • Độ mảnh phương dọc λy = 40.5, Hệ số δb = 1.14<br>
+            • Hàm lượng thép dọc ρ = 0.92% (Quy định 1.0% - 4.0%)<br>
+            • Sức kháng uốn dọc φMry = 32054.4 kNm
+        </div>
+    </div>
+</div>
+</body>
+</html>
+    
