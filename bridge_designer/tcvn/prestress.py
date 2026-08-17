@@ -24,7 +24,10 @@ class TendonGroup:
     eccentricity_end: float = 600.0  # Độ lệch tâm tại đầu neo (mm)
     tension_stage: int = 1     # Giai đoạn căng kéo (1: ngay sau đúc xà mũ; 3: sau khi lao dầm...)
     alpha_v: float = 0.0       # Góc nghiêng cáp tại mặt cắt ngàm (rad)
-    # Tọa độ 5 điểm hình học đường cáp dọc xà mũ (x: mm từ đầu trái, e: mm lệch tâm +TOP)
+    # Danh sách các điểm hình học đường cáp động (không giới hạn 5 điểm, có thể 10-15 điểm)
+    # Mỗi điểm là dict: {"x": mm, "e": mm, "type": 1|2|3 (thẳng, parabol trước, parabol sau)}
+    points: List[Dict[str, float]] = field(default_factory=list)
+    # Tọa độ 5 điểm hình học tương thích ngược
     x1: float = 0.0
     e1: float = 600.0
     x2: float = 6000.0
@@ -35,6 +38,18 @@ class TendonGroup:
     e4: float = 800.0
     x5: float = 23550.0
     e5: float = 600.0
+
+    def get_points_list(self) -> List[Dict[str, float]]:
+        """Lấy danh sách các điểm hình học đường cáp đầy đủ"""
+        if self.points and len(self.points) > 0:
+            return self.points
+        return [
+            {"x": self.x1, "e": self.e1, "type": 1},
+            {"x": self.x2, "e": self.e2, "type": 2},
+            {"x": self.x3, "e": self.e3, "type": 3},
+            {"x": self.x4, "e": self.e4, "type": 2},
+            {"x": self.x5, "e": self.e5, "type": 1},
+        ]
 
     @property
     def total_area(self) -> float:
@@ -129,7 +144,25 @@ class PrestressedCapSolver:
         self.concrete = concrete
         self.strand = strand
         self.rebar = rebar
-        self.tendon_groups = [g for g in tendon_groups if g.num_tendons > 0]
+        parsed_groups = []
+        for g in tendon_groups:
+            if isinstance(g, dict):
+                tg = TendonGroup(
+                    name=g.get("name", ""),
+                    num_tendons=g.get("num_tendons", 0),
+                    num_strands=g.get("num_strands", 12),
+                    eccentricity_end=g.get("eccentricity_end", 600.0),
+                    eccentricity_mid=g.get("eccentricity_mid", 1000.0),
+                    tension_stage=g.get("tension_stage", 1),
+                    jacking_stress_ratio=g.get("jacking_stress_ratio", 0.75),
+                    points=g.get("points", [])
+                )
+                if tg.num_tendons > 0:
+                    parsed_groups.append(tg)
+            elif isinstance(g, TendonGroup):
+                if g.num_tendons > 0:
+                    parsed_groups.append(g)
+        self.tendon_groups = parsed_groups
         self.K_wobble = K_wobble
         self.mu_curvature = mu_curvature
         self.delta_anchor = delta_anchor

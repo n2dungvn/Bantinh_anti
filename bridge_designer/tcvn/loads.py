@@ -249,3 +249,56 @@ def get_standard_load_combinations() -> Dict[str, LoadCombinationFactors]:
         )
     }
     return combs
+
+
+# Bảng cấp sông và thông số tàu thiết kế mặc định (TCVN 11823-3 Điều 3.14)
+RIVER_CLASS_DEFAULTS = {
+    "Cấp I": {"dwt": 3000.0, "v_ship": 3.5, "v_water": 1.8},
+    "Cấp II": {"dwt": 2000.0, "v_ship": 3.2, "v_water": 1.6},
+    "Cấp III": {"dwt": 1000.0, "v_ship": 3.0, "v_water": 1.5},
+    "Cấp IV": {"dwt": 500.0, "v_ship": 2.5, "v_water": 1.2},
+    "Cấp V": {"dwt": 300.0, "v_ship": 2.0, "v_water": 1.0},
+    "Cấp VI": {"dwt": 100.0, "v_ship": 1.8, "v_water": 0.8},
+}
+
+def calculate_vessel_collision_force(
+    river_class: str = "Cấp III",
+    ship_dwt: float = 1000.0,
+    ship_velocity: float = 3.0,
+    water_velocity: float = 1.5
+) -> Tuple[float, float, str]:
+    """
+    Tính toán lực va xô tàu thủy PS vào trụ cầu theo TCVN 11823-3 Điều 3.14.5.1
+    Công thức: PS = 1.09 * 10^3 * V * sqrt(DWT)
+    Trong đó:
+      - V: Tổng vận tốc va chạm = V_ship + V_water (m/s)
+      - DWT: Trọng tải tàu thiết kế (tấn)
+      - PS: Lực va chạm tương đương tĩnh (kN)
+    """
+    dwt = ship_dwt if ship_dwt > 0 else 1000.0
+    v_total = max(0.5, ship_velocity + water_velocity)
+    # Lực va chạm chuẩn TCVN
+    Ps_kN = 1.09 * 1.0e3 * v_total * math.sqrt(dwt)
+    # Động năng va chạm KE = 0.5 * M * V^2 (kJ) với M = 1.05 * DWT * 1000 kg
+    M_kg = 1.05 * dwt * 1000.0
+    KE_kJ = 0.5 * M_kg * (v_total ** 2) / 1000.0
+    formula_str = f"PS = 1.09×10³ × ({v_total:.2f} m/s) × √({dwt:.0f} T) = {Ps_kN:.1f} kN"
+    return Ps_kN, KE_kJ, formula_str
+
+
+def calculate_pedestrian_load(
+    width_bpl: float,
+    span_L: float,
+    p_PL: float = 3.0,
+    skew_angle_deg: float = 90.0
+) -> float:
+    """
+    Tính tải trọng người đi bộ PL truyền xuống gối mố/trụ (kN)
+    PL = p_PL * width_bpl * (span_L / 2)
+    """
+    if width_bpl <= 0:
+        return 0.0
+    alpha_rad = math.radians(skew_angle_deg)
+    # Phản lực KCN truyền xuống mố/trụ
+    return p_PL * width_bpl * (span_L / 2.0)
+

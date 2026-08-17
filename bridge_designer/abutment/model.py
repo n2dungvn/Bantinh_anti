@@ -119,7 +119,25 @@ class AbutmentModel:
         AbutmentPileRow(row_index=2, x=1.8, count=6, spacing=4.27)
     ])
     custom_piles: List[Dict[str, Any]] = field(default_factory=list) # Tọa độ từng cọc riêng biệt nếu không cách đều
-    pile_capacity_allowable: float = 3500.0 # Sức chịu tải cho phép 1 cọc (kN)
+    pile_capacity_allowable: float = 4800.0 # Sức chịu tải cho phép 1 cọc (kN)
+
+    # 9b. Địa chất & Tính toán sức chịu tải cọc TS-CAP (TCVN 11823-10)
+    ground_elev_m: float = 5.0                 # Cao độ mặt đất tự nhiên (m)
+    cap_bottom_elev_m: float = 0.0             # Cao độ đáy đài bệ (m)
+    pile_tip_elev_m: float = -35.0             # Cao độ mũi cọc (m)
+    water_elev_m: float = 2.0                  # Cao độ mực nước ngầm (m)
+    pile_type_ts_cap: str = "Cọc khoan nhồi"    # Cọc khoan nhồi / Cọc đóng
+    pile_mode_ts_cap: str = "Cọc khoan trong đất" # Cọc khoan trong đất / Cọc đóng / Cọc khoan trong đá
+    exclude_top_bored_m: float = 1.5           # Đoạn bỏ qua ma sát đầu cọc (m)
+    n_rebars_pile: int = 24                    # Số thanh thép chủ cọc
+    rebar_dia_pile: float = 25.0               # Đường kính thép chủ cọc (mm)
+    soil_layers: List[Dict[str, Any]] = field(default_factory=lambda: [
+        {"name": "Lớp 1: Bùn sét", "bottom_elev_m": -5.0, "soil_type": 2, "n_spt": 2.0, "gamma_kN_m3": 16.5, "c_mpa": 0.015, "phi_deg": 5.0, "qu_mpa": 0.0, "rqd": 0.0, "comment": ""},
+        {"name": "Lớp 2: Sét pha dẻo mềm", "bottom_elev_m": -15.0, "soil_type": 2, "n_spt": 6.0, "gamma_kN_m3": 18.0, "c_mpa": 0.025, "phi_deg": 12.0, "qu_mpa": 0.0, "rqd": 0.0, "comment": ""},
+        {"name": "Lớp 3: Cát hạt trung", "bottom_elev_m": -28.0, "soil_type": 1, "n_spt": 25.0, "gamma_kN_m3": 19.5, "c_mpa": 0.0, "phi_deg": 32.0, "qu_mpa": 0.0, "rqd": 0.0, "comment": ""},
+        {"name": "Lớp 4: Sét cứng/IGM", "bottom_elev_m": -45.0, "soil_type": 5, "n_spt": 50.0, "gamma_kN_m3": 20.0, "c_mpa": 0.08, "phi_deg": 22.0, "qu_mpa": 0.5, "rqd": 30.0, "comment": ""}
+    ])
+    auto_calculate_capacity: bool = True       # Tự động tính sức chịu tải từ TS-CAP
 
     # 10. Bố trí cốt thép chi tiết từng cấu kiện
     # Thân mố

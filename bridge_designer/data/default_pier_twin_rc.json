@@ -1,8 +1,8 @@
 {
   "project_name": "Cầu Km19+000",
-  "pier_name": "Trụ T1 (1 Thân RC)",
-  "pier_column_type": "SINGLE",
-  "spacing_twin_columns": 4.0,
+  "pier_name": "Trụ T2 (2 Thân RC)",
+  "pier_column_type": "TWIN",
+  "spacing_twin_columns": 6.5,
   "cap_type": "RC",
   "span_L1": 38.2,
   "span_L2": 38.2,
@@ -26,16 +26,16 @@
   "shape_type": 1,
   "bth1": 5.5,
   "hth1": 1.6,
-  "bth1_col": 2.0,
+  "bth1_col": 2.2,
   "hth1_col": 1.6,
   "cx": 0.3,
   "cy": 0.3,
-  "is_tapered": 1,
-  "bth2": 9.5,
+  "is_tapered": 0,
+  "bth2": 2.2,
   "hth2": 1.6,
   "Hth": 8.4,
-  "bmr": 7.5,
-  "hmr": 2.84,
+  "bmr": 0.0,
+  "hmr": 0.0,
   "hxm": 1.73,
   "hxm_root": 2.2,
   "hxm_tip": 1.2,
@@ -51,7 +51,7 @@
   "num_bearings_per_row": 10,
   "bearing_spacing": 2.35,
   "Bbe": 6.0,
-  "Cbe": 11.4,
+  "Cbe": 14.5,
   "Hbe": 2.0,
   "fc_prime": 30.0,
   "fy": 400.0,
@@ -78,7 +78,7 @@
   "bearing_state_right": "SLIDE",
   "expansion_chain": [
     {"name": "Mố A", "x": 0.0, "span_L": 38.2, "bearing_left": "—", "bearing_right": "Chậu di động 2 phương", "mu": 0.05},
-    {"name": "Trụ T1 (1 Thân RC)", "x": 38.2, "span_L": 38.2, "bearing_left": "Chậu di động 1 phương ngang", "bearing_right": "Chậu di động 2 phương", "mu": 0.05},
+    {"name": "Trụ T1 (2 Thân RC)", "x": 38.2, "span_L": 38.2, "bearing_left": "Chậu di động 1 phương ngang", "bearing_right": "Chậu di động 2 phương", "mu": 0.05},
     {"name": "Trụ T2", "x": 76.4, "span_L": 38.2, "bearing_left": "Chậu di động 1 phương ngang", "bearing_right": "Chậu di động 1 phương ngang", "mu": 0.05},
     {"name": "Trụ T3", "x": 114.6, "span_L": 38.2, "bearing_left": "Chậu di động 2 phương", "bearing_right": "Chậu di động 1 phương ngang", "mu": 0.05},
     {"name": "Mố B", "x": 152.8, "span_L": 0.0, "bearing_left": "Chậu di động 2 phương", "bearing_right": "—", "mu": 0.05}
@@ -114,13 +114,13 @@
     {
       "row_index": 1,
       "x": -1.8,
-      "count": 4,
+      "count": 5,
       "spacing": 3.2
     },
     {
       "row_index": 2,
       "x": 1.8,
-      "count": 4,
+      "count": 5,
       "spacing": 3.2
     }
   ],
@@ -193,14 +193,14 @@
   "rebar_layers_stem": [
     {
       "layer_name": "L1 (Lớp ngoài)",
-      "count": 48,
+      "count": 32,
       "dia_mm": 32.0,
       "m_bundle": 1,
       "y_edge_mm": 100.0
     },
     {
       "layer_name": "L2 (Lớp trong)",
-      "count": 40,
+      "count": 24,
       "dia_mm": 32.0,
       "m_bundle": 1,
       "y_edge_mm": 180.0

@@ -49,28 +49,39 @@ def calculate_pier_loads(model: PierModel) -> PierLoadsSummary:
     My_DW = model.DW_left * model.e_left + model.DW_right * model.e_right
 
     # 2. TĨNH TẢI BẢN THÂN TRỤ (DC2)
-    # 2.1 Xà mũ
-    V_xm = model.Vxm
+    # 2.1 Xà mũ vát thay đổi tiết diện
+    h_root = getattr(model, "hxm_root", model.hxm)
+    h_tip = getattr(model, "hxm_tip", 1.2)
+    l_cant = getattr(model, "L_cant", 7.0)
+    l_mid = getattr(model, "L_mid", max(0.0, model.Lxm - 2.0 * l_cant))
+    V_mid = l_mid * h_root * model.bxm
+    V_cant = 2.0 * l_cant * ((h_root + h_tip) / 2.0) * model.bxm
+    V_xm = V_mid + V_cant if (V_mid + V_cant) > 0 else model.Vxm
     DC2_cap = V_xm * gc
 
-    # 2.2 Thân trụ
-    # Tính diện tích đáy và đỉnh
-    if model.shape_type == 0:  # Chữ nhật
-        Ag_bot = model.bth1 * model.hth1
-        Ag_top = (model.bth2 * model.hth2) if model.is_tapered else Ag_bot
-    elif model.shape_type == 1:  # Đầu tròn
-        R_bot = model.hth1 / 2.0
-        Ag_bot = max(0.0, model.bth1 - 2.0 * R_bot) * model.hth1 + math.pi * (R_bot ** 2)
-        R_top = model.hth2 / 2.0
-        Ag_top = (max(0.0, model.bth2 - 2.0 * R_top) * model.hth2 + math.pi * (R_top ** 2)) if model.is_tapered else Ag_bot
-    else:  # Vát góc
-        Ag_bot = model.bth1 * model.hth1 - 2.0 * model.cx * model.cy
-        Ag_top = (model.bth2 * model.hth2 - 2.0 * model.cx * model.cy) if model.is_tapered else Ag_bot
-
-    # Nếu có 2 thân (TWIN)
+    # 2.2 Thân trụ (1 thân hoặc 2 thân)
     if model.pier_column_type == "TWIN":
-        Ag_bot *= 2.0
-        Ag_top *= 2.0
+        b_col = getattr(model, "bth1_col", 2.0)
+        h_col = getattr(model, "hth1_col", 1.6)
+        if model.shape_type == 1:  # Đầu tròn
+            R_c = h_col / 2.0
+            Ag_1col = max(0.0, b_col - 2.0 * R_c) * h_col + math.pi * (R_c ** 2)
+        else:
+            Ag_1col = b_col * h_col
+        Ag_bot = Ag_1col * 2.0
+        Ag_top = Ag_bot
+    else:
+        if model.shape_type == 0:  # Chữ nhật
+            Ag_bot = model.bth1 * model.hth1
+            Ag_top = (model.bth2 * model.hth2) if model.is_tapered else Ag_bot
+        elif model.shape_type == 1:  # Đầu tròn
+            R_bot = model.hth1 / 2.0
+            Ag_bot = max(0.0, model.bth1 - 2.0 * R_bot) * model.hth1 + math.pi * (R_bot ** 2)
+            R_top = model.hth2 / 2.0
+            Ag_top = (max(0.0, model.bth2 - 2.0 * R_top) * model.hth2 + math.pi * (R_top ** 2)) if model.is_tapered else Ag_bot
+        else:  # Vát góc
+            Ag_bot = model.bth1 * model.hth1 - 2.0 * model.cx * model.cy
+            Ag_top = (model.bth2 * model.hth2 - 2.0 * model.cx * model.cy) if model.is_tapered else Ag_bot
 
     # Thể tích thân trụ: V = Hth * (Ag_bot + Ag_top) / 2
     V_stem = model.Hth * (Ag_bot + Ag_top) / 2.0
@@ -173,28 +184,45 @@ def calculate_pier_loads(model: PierModel) -> PierLoadsSummary:
     My_BR_stem = BR_total * z_BR_stem
 
     # 6. HỆ GỐI VÀ BIẾN DẠNG CƯỠNG BỨC (TU, CR, SH, FR)
-    # Giải hệ gối bằng BearingChainSolver
-    nodes = model.chain_nodes
-    if not nodes:
-        # Tự động tạo 1 nút trụ đang tính nếu chưa có
-        nodes = [
-            BearingNode(
-                name=model.pier_name,
-                x=model.span_L1,
-                L_next_span=model.span_L2,
-                bearing_type_left="Chậu di động 1 phương ngang",
-                bearing_type_right="Chậu di động 2 phương",
-                state_left=model.bearing_state_left,
-                state_right=model.bearing_state_right,
+    from ..tcvn.bearings import get_bearing_longitudinal_state
+    nodes = []
+    if getattr(model, "expansion_chain", None) and len(model.expansion_chain) > 0:
+        for item in model.expansion_chain:
+            b_left = str(item.get("bearing_left", "Chậu di động 1 phương ngang"))
+            b_right = str(item.get("bearing_right", "Chậu di động 2 phương"))
+            nodes.append(BearingNode(
+                name=str(item.get("name", "")),
+                x=float(item.get("x", 0.0)),
+                L_next_span=float(item.get("span_L", model.span_L1)),
+                bearing_type_left=b_left,
+                bearing_type_right=b_right,
+                state_left=get_bearing_longitudinal_state(b_left),
+                state_right=get_bearing_longitudinal_state(b_right),
                 K_pier=1.7e5,
-                mu_friction=model.friction_mu
-            )
+                mu_friction=float(item.get("mu", model.friction_mu))
+            ))
+    elif model.chain_nodes:
+        nodes = model.chain_nodes
+    else:
+        nodes = [
+            BearingNode(name="Mố A", x=0.0, L_next_span=model.span_L1, bearing_type_left="—", bearing_type_right="Chậu di động 2 phương", mu_friction=model.friction_mu),
+            BearingNode(name=model.pier_name, x=model.span_L1, L_next_span=model.span_L2, bearing_type_left=getattr(model, "bearing_type_left", "Chậu di động 1 phương ngang"), bearing_type_right=getattr(model, "bearing_type_right", "Chậu di động 2 phương"), state_left=model.bearing_state_left, state_right=model.bearing_state_right, mu_friction=model.friction_mu),
+            BearingNode(name="Mố B", x=model.span_L1 + model.span_L2, L_next_span=0.0, bearing_type_left="Chậu di động 2 phương", bearing_type_right="—", mu_friction=model.friction_mu)
         ]
-    chain_solver = BearingChainSolver(nodes)
+
+    chain_solver = BearingChainSolver(
+        nodes=nodes,
+        alpha_thermal=getattr(model, "alpha_thermal", 1.08e-5),
+        delta_T_pos=getattr(model, "delta_T_pos", 20.0),
+        delta_T_neg=getattr(model, "delta_T_neg", 20.0),
+        eps_sh=getattr(model, "eps_sh", 200.0e-6),
+        eps_cr=getattr(model, "eps_cr", 300.0e-6)
+    )
     bearing_res = chain_solver.solve_pier_forces(
         target_node_name=model.pier_name,
         N_left_DL=model.DC1_left + model.DW_left,
-        N_right_DL=model.DC1_right + model.DW_right
+        N_right_DL=model.DC1_right + model.DW_right,
+        K_stem=1.7e5
     )
 
     # 7. GIÓ (WS, WL)
@@ -267,33 +295,53 @@ def calculate_pier_loads(model: PierModel) -> PierLoadsSummary:
         My_WA_stem = 0.0
         My_WA_footing = 0.0
 
-    # 9. ĐỘNG ĐẤT (EQ)
+    # 9. ĐỘNG ĐẤT (EQ) PHÂN TÁCH HỆ SỐ R THÂN VS MÓNG
     Csm = min(2.5 * model.accel_A, (1.2 * model.accel_A * model.S_seismic) / (0.5 ** (2.0 / 3.0)))
     N_LL_max = model.num_lanes * R_1lane_2span_no_m * m_all
 
-    F_EQ_kcn = Csm * (DC1_total + DW_total + 0.5 * N_LL_max) / model.R_pier
-    F_EQ_sub_stem = Csm * (DC2_cap + DC2_stem) / model.R_self
-    F_EQ_sub_footing = Csm * (DC2_cap + DC2_stem + DC2_footing) / model.R_self
+    R_stem = getattr(model, "R_pier_stem", getattr(model, "R_pier", 3.0))
+    R_footing = getattr(model, "R_pier_foundation", 1.0)
 
-    EQ_stem = F_EQ_kcn + F_EQ_sub_stem
-    EQ_footing = F_EQ_kcn + F_EQ_sub_footing
+    # Lực động đất cho thân trụ
+    F_EQ_kcn_stem = Csm * (DC1_total + DW_total + 0.5 * N_LL_max) / R_stem
+    F_EQ_sub_stem = Csm * (DC2_cap + DC2_stem) / model.R_self
+    EQ_stem = F_EQ_kcn_stem + F_EQ_sub_stem
+
+    # Lực động đất cho bệ móng cọc (R = 1.0 theo TCVN 11823)
+    F_EQ_kcn_footing = Csm * (DC1_total + DW_total + 0.5 * N_LL_max) / R_footing
+    F_EQ_sub_footing = Csm * (DC2_cap + DC2_stem + DC2_footing) / R_footing
+    EQ_footing = F_EQ_kcn_footing + F_EQ_sub_footing
 
     # EQ ngang (Mx) và EQ dọc (My)
-    Mx_EQ_stem = F_EQ_kcn * z_kcn_stem + F_EQ_sub_stem * (model.Hth / 2.0)
-    Mx_EQ_footing = F_EQ_kcn * z_kcn_footing + F_EQ_sub_footing * (model.Hbe + model.Hth / 2.0)
+    Mx_EQ_stem = F_EQ_kcn_stem * z_kcn_stem + F_EQ_sub_stem * (model.Hth / 2.0)
+    Mx_EQ_footing = F_EQ_kcn_footing * z_kcn_footing + F_EQ_sub_footing * (model.Hbe + model.Hth / 2.0)
 
-    My_EQ_stem = F_EQ_kcn * z_kcn_stem + F_EQ_sub_stem * (model.Hth / 2.0)
-    My_EQ_footing = F_EQ_kcn * z_kcn_footing + F_EQ_sub_footing * (model.Hbe + model.Hth / 2.0)
+    My_EQ_stem = F_EQ_kcn_stem * z_kcn_stem + F_EQ_sub_stem * (model.Hth / 2.0)
+    My_EQ_footing = F_EQ_kcn_footing * z_kcn_footing + F_EQ_sub_footing * (model.Hbe + model.Hth / 2.0)
 
-    # 10. VA XE (CT = 1800 kN) VÀ VA TÀU (CV)
-    CT_val = model.CT if model.has_vehicle_collision else 0.0
+    # 10. VA XE (CT = 1800 kN) VÀ VA TÀU THỦY (CV)
+    CT_val = model.CT if getattr(model, "has_vehicle_collision", 1) else 0.0
     z_CT = model.z_CT  # đo từ đáy bệ
     z_CT_stem = max(0.0, z_CT - model.Hbe)
     My_CT_stem = CT_val * z_CT_stem
     My_CT_footing = CT_val * z_CT
 
-    CV_val = model.CV
-    z_CV = model.z_CV
+    # Tự động tính lực va tàu thủy nếu bật
+    from ..tcvn.loads import calculate_vessel_collision_force
+    if getattr(model, "has_ship_collision", 0) == 1:
+        if getattr(model, "auto_calc_vessel_collision", True):
+            CV_val, _, _ = calculate_vessel_collision_force(
+                river_class=getattr(model, "river_class", "Cấp III"),
+                ship_dwt=getattr(model, "ship_DWT", 1000.0),
+                ship_velocity=getattr(model, "ship_velocity_m_s", 3.0),
+                water_velocity=getattr(model, "V_water_flow", 1.5)
+            )
+        else:
+            CV_val = model.CV
+    else:
+        CV_val = model.CV
+
+    z_CV = getattr(model, "z_CV", 3.5)
     z_CV_stem = max(0.0, z_CV - model.Hbe)
     My_CV_stem = CV_val * z_CV_stem
     My_CV_footing = CV_val * z_CV

@@ -127,25 +127,44 @@ def check_pier_stem(
     )
     Ag_mm2 = fiber_sec.get_gross_area()
 
-    # Bố trí cốt thép dọc thân trụ
-    # Thép dọc xung quanh chu vi thân trụ
-    A_bar = math.pi * (model.rebar_diam_stem ** 2) / 4.0
-    perim = 2.0 * (b_mm + h_mm)
-    num_bars = max(16, int(perim / model.rebar_spacing_stem))
-    As_total = num_bars * A_bar
+    # Bố trí cốt thép dọc thân trụ (Hỗ trợ nhiều lớp thép dọc hoặc phân bố chu vi)
+    rebar_layers = getattr(model, "rebar_layers_stem", [])
+    if rebar_layers and len(rebar_layers) > 0 and any(l.get("count", 0) > 0 for l in rebar_layers):
+        As_total = 0.0
+        total_A_y = 0.0
+        for idx, l in enumerate(rebar_layers):
+            cnt = l.get("count", 0)
+            dia = l.get("dia_mm", 32.0)
+            y_edge = l.get("y_edge_mm", 100.0)
+            if cnt > 0:
+                A_layer = cnt * math.pi * (dia ** 2) / 4.0
+                As_total += A_layer
+                total_A_y += A_layer * y_edge
+                # Add to fiber section (symmetrical on top/bot and left/right)
+                y_coord = max(0.0, h_mm / 2.0 - y_edge)
+                x_coord = max(0.0, b_mm / 2.0 - y_edge)
+                fiber_sec.add_rebar_layer(RebarLayer(name=f"L{idx+1}_Top", count=max(1, cnt//4), diameter=dia, area=A_layer/4.0, y=y_coord, x=0.0))
+                fiber_sec.add_rebar_layer(RebarLayer(name=f"L{idx+1}_Bot", count=max(1, cnt//4), diameter=dia, area=A_layer/4.0, y=-y_coord, x=0.0))
+                fiber_sec.add_rebar_layer(RebarLayer(name=f"L{idx+1}_Left", count=max(1, cnt//4), diameter=dia, area=A_layer/4.0, y=0.0, x=-x_coord))
+                fiber_sec.add_rebar_layer(RebarLayer(name=f"L{idx+1}_Right", count=max(1, cnt//4), diameter=dia, area=A_layer/4.0, y=0.0, x=x_coord))
+        d_prime = total_A_y / As_total if As_total > 0 else model.cover_stem
+    else:
+        A_bar = math.pi * (model.rebar_diam_stem ** 2) / 4.0
+        perim = 2.0 * (b_mm + h_mm)
+        num_bars = max(16, int(perim / model.rebar_spacing_stem))
+        As_total = num_bars * A_bar
 
-    # Phân bố các thanh thép vào 4 cạnh
-    # Lớp trên và dưới (phương Y: y = ±(h/2 - cover))
-    half_h = h_mm / 2.0 - model.cover_stem
-    half_b = b_mm / 2.0 - model.cover_stem
+        half_h = h_mm / 2.0 - model.cover_stem
+        half_b = b_mm / 2.0 - model.cover_stem
 
-    n_bars_side_y = max(4, int(num_bars * (b_mm / perim)))
-    n_bars_side_x = max(4, int(num_bars * (h_mm / perim)))
+        n_bars_side_y = max(4, int(num_bars * (b_mm / perim)))
+        n_bars_side_x = max(4, int(num_bars * (h_mm / perim)))
 
-    fiber_sec.add_rebar_layer(RebarLayer(name="Top", count=n_bars_side_y, diameter=model.rebar_diam_stem, area=n_bars_side_y * A_bar, y=half_h, x=0.0))
-    fiber_sec.add_rebar_layer(RebarLayer(name="Bot", count=n_bars_side_y, diameter=model.rebar_diam_stem, area=n_bars_side_y * A_bar, y=-half_h, x=0.0))
-    fiber_sec.add_rebar_layer(RebarLayer(name="Left", count=n_bars_side_x, diameter=model.rebar_diam_stem, area=n_bars_side_x * A_bar, y=0.0, x=-half_b))
-    fiber_sec.add_rebar_layer(RebarLayer(name="Right", count=n_bars_side_x, diameter=model.rebar_diam_stem, area=n_bars_side_x * A_bar, y=0.0, x=half_b))
+        fiber_sec.add_rebar_layer(RebarLayer(name="Top", count=n_bars_side_y, diameter=model.rebar_diam_stem, area=n_bars_side_y * A_bar, y=half_h, x=0.0))
+        fiber_sec.add_rebar_layer(RebarLayer(name="Bot", count=n_bars_side_y, diameter=model.rebar_diam_stem, area=n_bars_side_y * A_bar, y=-half_h, x=0.0))
+        fiber_sec.add_rebar_layer(RebarLayer(name="Left", count=n_bars_side_x, diameter=model.rebar_diam_stem, area=n_bars_side_x * A_bar, y=0.0, x=-half_b))
+        fiber_sec.add_rebar_layer(RebarLayer(name="Right", count=n_bars_side_x, diameter=model.rebar_diam_stem, area=n_bars_side_x * A_bar, y=0.0, x=half_b))
+        d_prime = model.cover_stem
 
     # Sinh đường cong P-M phương dọc (Y) và ngang (X)
     pm_curve_y = fiber_sec.generate_pm_curve(axis="Y")

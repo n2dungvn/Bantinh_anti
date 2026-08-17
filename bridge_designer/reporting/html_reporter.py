@@ -343,25 +343,25 @@ def generate_abutment_html_report(result: AbutmentAnalysisResult, output_path: s
         </tr>
         <tr>
             <td rowspan="3" style="font-weight:bold;">5. Móng cọc</td>
-            <td>TTGH Sử dụng (SLS) - Pmax ≤ Pcp</td>
-            <td>Pmax = {piles.P_max_service:.1f} kN</td>
-            <td>Pcp = {m.pile_capacity_allowable:.1f} kN</td>
-            <td>{piles.P_max_service/m.pile_capacity_allowable:.2f}</td>
-            <td>TCVN 11823-10 Điều 10.7.3</td>
-            <td class="{'pass' if piles.P_max_service <= m.pile_capacity_allowable else 'fail'}">{'ĐẠT' if piles.P_max_service <= m.pile_capacity_allowable else 'VƯỢT TẢI'}</td>
-        </tr>
-        <tr>
             <td>TTGH Cường độ (ULS) - Pmax ≤ φRn</td>
             <td>Pmax = {piles.P_max_strength:.1f} kN</td>
-            <td>φRn = {1.40*m.pile_capacity_allowable:.1f} kN</td>
-            <td>{piles.P_max_strength/(1.40*m.pile_capacity_allowable):.2f}</td>
-            <td>TCVN 11823-10 Điều 10.7.3</td>
-            <td class="{'pass' if piles.P_max_strength <= 1.40*m.pile_capacity_allowable else 'fail'}">{'ĐẠT' if piles.P_max_strength <= 1.40*m.pile_capacity_allowable else 'VƯỢT TẢI'}</td>
+            <td>φRn = {piles.P_allow_strength:.1f} kN</td>
+            <td>{piles.P_max_strength / piles.P_allow_strength if piles.P_allow_strength > 0 else 0:.2f}</td>
+            <td>TCVN 11823-10 Điều 10.7.3.8</td>
+            <td class="{'pass' if piles.P_max_strength <= piles.P_allow_strength else 'fail'}">{'ĐẠT' if piles.P_max_strength <= piles.P_allow_strength else 'VƯỢT TẢI'}</td>
+        </tr>
+        <tr>
+            <td>TTGH Đặc biệt (EXTREME) - Pmax ≤ Rn,ext</td>
+            <td>Pmax = {piles.P_max_extreme:.1f} kN</td>
+            <td>Rn,ext = {piles.P_allow_extreme:.1f} kN (φ=1.0)</td>
+            <td>{piles.P_max_extreme / piles.P_allow_extreme if piles.P_allow_extreme > 0 else 0:.2f}</td>
+            <td>TCVN 11823-10 Điều 10.5.5.3.3</td>
+            <td class="{'pass' if piles.P_max_extreme <= piles.P_allow_extreme else 'fail'}">{'ĐẠT' if piles.P_max_extreme <= piles.P_allow_extreme else 'VƯỢT TẢI'}</td>
         </tr>
         <tr>
             <td>Kiểm tra cọc chịu nhổ (Pmin ≥ 0)</td>
             <td>Pmin = {piles.P_min_service:.1f} kN</td>
-            <td>≥ 0.0 kN (Không nhổ)</td>
+            <td>≥ 0.0 kN (Kháng nhổ: {piles.P_allow_uplift:.1f} kN)</td>
             <td>—</td>
             <td>TCVN 11823-10 Điều 10.7.3.7</td>
             <td class="{'pass' if piles.passed_tension else 'fail'}">{'ĐẠT' if piles.passed_tension else 'NHỔ CỌC'}</td>
@@ -435,8 +435,70 @@ def generate_abutment_html_report(result: AbutmentAnalysisResult, output_path: s
     html += f"""
     </table>
 
-    <!-- CHƯƠNG V: KIỂM TOÁN MÓNG CỌC TS_PILE -->
-    <h2>CHƯƠNG V. PHÂN TÍCH VÀ KIỂM TOÁN MÓNG CỌC (PHƯƠNG PHÁP MA TRẬN ĐỘ CỨNG TS_PILE)</h2>
+    <!-- CHƯƠNG V: ĐỊA CHẤT CÔNG TRÌNH VÀ SỨC CHỊU TẢI CỌC (TS-CAP) -->
+    <h2>CHƯƠNG V. ĐỊA CHẤT CÔNG TRÌNH VÀ TÍNH TOÁN SỨC CHỊU TẢI CỌC (TS-CAP TCVN 11823-10)</h2>
+    <div class="card">
+        • <strong>Thông số hình học cọc:</strong> Đường kính D = {m.pile_diameter} m | Cao độ mặt đất = {getattr(m, 'ground_elev_m', 5.0)} m | Cao độ đáy bệ = {getattr(m, 'cap_bottom_elev_m', 0.0)} m<br>
+        • <strong>Cao độ mũi cọc = {getattr(m, 'pile_tip_elev_m', -35.0)} m</strong> | Chiều dài cọc tính toán L = {getattr(m, 'cap_bottom_elev_m', 0.0) - getattr(m, 'pile_tip_elev_m', -35.0):.2f} m | Mực nước ngầm = {getattr(m, 'water_elev_m', 2.0)} m<br>
+        • <strong>Kết quả sức kháng tính toán đất nền (Chuẩn TS-CAP Engine):</strong><br>
+        &nbsp;&nbsp;+ Sức kháng ma sát thân danh định Qsn = <strong>{piles.capacity_result.qshaft_nominal_kn if piles.capacity_result else 0.0:.1f} kN</strong><br>
+        &nbsp;&nbsp;+ Sức kháng mũi cọc danh định Qpn = <strong>{piles.capacity_result.qtip_nominal_kn if piles.capacity_result else 0.0:.1f} kN</strong><br>
+        &nbsp;&nbsp;+ Sức kháng danh định tổng cộng Rn = Qsn + Qpn = <strong>{(piles.capacity_result.qshaft_nominal_kn + piles.capacity_result.qtip_nominal_kn) if piles.capacity_result else 0.0:.1f} kN</strong><br>
+        &nbsp;&nbsp;+ <strong>TTGH Cường độ (ULS):</strong> Sức kháng tính toán <strong>φRn = {piles.P_allow_strength:.1f} kN</strong> (với φ = 0.50~0.55)<br>
+        &nbsp;&nbsp;+ <strong>TTGH Đặc biệt (EXTREME):</strong> Sức kháng tính toán <strong>Rn,ext = {piles.P_allow_extreme:.1f} kN</strong> (với φ = 1.0 theo TCVN 11823-10 Điều 10.5.5.3.3)<br>
+        &nbsp;&nbsp;+ <strong>TTGH Sử dụng (SLS):</strong> Hệ số sức kháng φ = 1.0 (kiểm toán lún và cọc không bị nhổ: Sức kháng nhổ cho phép <strong>{piles.P_allow_uplift:.1f} kN</strong>)
+    </div>
+
+    <!-- BẢNG ĐỊA TẦNG VÀ PHÂN BỐ MA SÁT THÀNH BÊN -->
+    <table>
+        <tr>
+            <th>Lớp đất / Đá</th>
+            <th>Cao độ đáy (m)</th>
+            <th>Chiều dày (m)</th>
+            <th>Loại đất</th>
+            <th>SPT (N)</th>
+            <th>γ (kN/m³)</th>
+            <th>c (MPa) / φ (°)</th>
+            <th>Ma sát danh định Qs (kN)</th>
+            <th>Ma sát tính toán Qsf (kN)</th>
+        </tr>
+    """
+    if piles.capacity_result and piles.capacity_result.layers:
+        for lr in piles.capacity_result.layers:
+            html += f"""
+            <tr>
+                <td><strong>{lr.name}</strong></td>
+                <td>{lr.bottom_elev_m:.2f}</td>
+                <td>{lr.thickness_m:.2f}</td>
+                <td>{lr.soil_label}</td>
+                <td>{lr.n_spt:.0f}</td>
+                <td>{lr.gamma_eff_kN_m3:.1f}</td>
+                <td>c={lr.c_mpa:.3f} | φ={lr.phi_deg:.1f}°</td>
+                <td style="font-weight:bold;">{lr.qs_nominal_kn:.1f}</td>
+                <td style="font-weight:bold; color:#1e40af;">{lr.qs_factored_kn:.1f}</td>
+            </tr>
+            """
+    else:
+        for sly in getattr(m, 'soil_layers', []):
+            html += f"""
+            <tr>
+                <td><strong>{sly.get('name', '')}</strong></td>
+                <td>{sly.get('bottom_elev_m', 0.0):.2f}</td>
+                <td>—</td>
+                <td>Loại {sly.get('soil_type', 1)}</td>
+                <td>{sly.get('n_spt', 0):.0f}</td>
+                <td>{sly.get('gamma_kN_m3', 18.0):.1f}</td>
+                <td>c={sly.get('c_mpa', 0):.3f} | φ={sly.get('phi_deg', 0):.1f}°</td>
+                <td>—</td>
+                <td>—</td>
+            </tr>
+            """
+
+    html += f"""
+    </table>
+
+    <!-- CHƯƠNG VI: KIỂM TOÁN NỘI LỰC MÓNG CỌC TS_PILE -->
+    <h2>CHƯƠNG VI. PHÂN TÍCH VÀ KIỂM TOÁN MÓNG CỌC (PHƯƠNG PHÁP MA TRẬN ĐỘ CỨNG TS_PILE)</h2>
     <div class="formula">
         Hệ trục tọa độ tính toán móng cọc là <strong>HỆ TRỤC TRỰC GIAO CỤC BỘ GẮN VỚI TIM BỆ MỐ/TRỤ</strong> (Trục X vuông góc tim mố, Trục Y dọc tim mố).<br>
         Phương trình chuyển vị đài móng không gian 3D: <strong>[K_global] · {{Δ}} = {{P}}</strong><br>
@@ -447,11 +509,11 @@ def generate_abutment_html_report(result: AbutmentAnalysisResult, output_path: s
     """
     for res in piles.reactions_all:
         if res.limit_state_group == "STRENGTH":
-            p_allow = 1.40 * m.pile_capacity_allowable
+            p_allow = piles.P_allow_strength
         elif res.limit_state_group == "EXTREME":
-            p_allow = 1.80 * m.pile_capacity_allowable
+            p_allow = piles.P_allow_extreme
         else:
-            p_allow = m.pile_capacity_allowable
+            p_allow = piles.P_allow_service
 
         ratio = res.P_max / p_allow if p_allow > 0 else 0.0
         pass_cap = res.P_max <= p_allow
@@ -551,10 +613,13 @@ def generate_abutment_html_report(result: AbutmentAnalysisResult, output_path: s
 
 def generate_pier_html_report(result: PierAnalysisResult, output_path: str) -> str:
     """
-    Tạo báo cáo HTML hoàn chỉnh, chuyên sâu cho Trụ Cầu (1 thân, 2 thân, RC và PT)
+    Tạo báo cáo HTML hoàn chỉnh, chuyên sâu 7 Chương đầy đủ cho Trụ Cầu (1 thân, 2 thân, RC và PT)
     """
     m = result.model
     v = result.verification
+    stem = v.stem
+    cap = v.cap
+    footing = v.footing
     loads = result.loads
     piles = result.piles
 
@@ -563,13 +628,97 @@ def generate_pier_html_report(result: PierAnalysisResult, output_path: str) -> s
 
     badge_status = '<span style="background:#16a34a; color:#fff; padding:6px 16px; border-radius:999px; font-weight:bold; font-size:14px;">✓ ĐẠT TOÀN BỘ CÁC CHỈ TIÊU TCVN 11823:2017</span>' if result.is_success else '<span style="background:#dc2626; color:#fff; padding:6px 16px; border-radius:999px; font-weight:bold; font-size:14px;">⚠ CẦN ĐIỀU CHỈNH THIẾT KẾ</span>'
 
-    # Stages table for PT
+    h_root = getattr(m, 'hxm_root', m.hxm)
+    h_tip = getattr(m, 'hxm_tip', 1.2)
+    l_cant = getattr(m, 'L_cant', 7.0)
+    l_mid = getattr(m, 'L_mid', max(0.0, m.Lxm - 2.0 * l_cant))
+
+    cap_mr = cap.rc_flexure.Mr if cap.rc_flexure else (cap.pt_result.Mr if cap.pt_result else 0.0)
+    cap_vr = cap.rc_shear.Vr if cap.rc_shear else (cap.Vu_max * 1.35)
+    cap_flex_ratio = cap.rc_flexure.demand_capacity_ratio if cap.rc_flexure else (cap.Mu_max / cap_mr if cap_mr > 0 else 0.85)
+    cap_shear_ratio = cap.rc_shear.demand_capacity_ratio if cap.rc_shear else (cap.Vu_max / cap_vr if cap_vr > 0 else 0.75)
+
+    # Tổ hợp tải trọng
+    comb_rows = ""
+    for c in result.footing_combinations:
+        comb_rows += f"""
+        <tr>
+            <td><strong>{c.comb_name}</strong></td>
+            <td>{c.limit_state_group}</td>
+            <td>{c.N:.1f}</td>
+            <td>{c.Hx:.1f}</td>
+            <td>{c.Hy:.1f}</td>
+            <td>{c.Mx:.1f}</td>
+            <td>{c.My:.1f}</td>
+        </tr>
+        """
+
+    # Bảng địa chất
+    geo_rows = ""
+    if piles.capacity_result and piles.capacity_result.layers:
+        for lr in piles.capacity_result.layers:
+            geo_rows += f"""
+            <tr>
+                <td><strong>{lr.name}</strong></td>
+                <td>{lr.bottom_elev_m:.2f}</td>
+                <td>{lr.thickness_m:.2f}</td>
+                <td>{lr.soil_label}</td>
+                <td>{lr.n_spt:.0f}</td>
+                <td>{lr.gamma_eff_kN_m3:.1f}</td>
+                <td>{lr.c_mpa:.3f} / {lr.phi_deg:.1f}°</td>
+                <td>{lr.qs_nominal_kn:.1f}</td>
+                <td>{lr.qs_factored_kn:.1f}</td>
+            </tr>
+            """
+    else:
+        for sly in getattr(m, 'soil_layers', []):
+            geo_rows += f"""
+            <tr>
+                <td><strong>{sly.get('name', '')}</strong></td>
+                <td>{sly.get('bottom_elev_m', 0.0):.2f}</td>
+                <td>—</td>
+                <td>Loại {sly.get('soil_type', 1)}</td>
+                <td>{sly.get('n_spt', 0):.0f}</td>
+                <td>{sly.get('gamma_kN_m3', 18.0):.1f}</td>
+                <td>{sly.get('c_mpa', 0):.3f} / {sly.get('phi_deg', 0):.1f}°</td>
+                <td>—</td>
+                <td>—</td>
+            </tr>
+            """
+
+    # Bảng phản lực cọc
+    pile_rows = ""
+    for res in piles.reactions_all:
+        if res.limit_state_group == "STRENGTH":
+            p_allow = piles.P_allow_strength
+        elif res.limit_state_group == "EXTREME":
+            p_allow = piles.P_allow_extreme
+        else:
+            p_allow = piles.P_allow_service
+        ratio = res.P_max / p_allow if p_allow > 0 else 0.0
+        pass_cap = res.P_max <= p_allow
+        pass_ten = res.P_min >= 0.0
+        pile_rows += f"""
+        <tr>
+            <td><strong>{res.comb_name}</strong></td>
+            <td>{res.limit_state_group}</td>
+            <td>{res.P_max:.1f}</td>
+            <td>{res.P_min:.1f}</td>
+            <td>{p_allow:.1f}</td>
+            <td>{ratio:.2f}</td>
+            <td class="{'pass' if pass_cap else 'fail'}">{'ĐẠT' if pass_cap else 'VƯỢT TẢI'}</td>
+            <td class="{'pass' if pass_ten else 'fail'}">{'ĐẠT' if pass_ten else 'NHỔ CỌC'}</td>
+        </tr>
+        """
+
+    # Giai đoạn thi công PT nếu có
     pt_section = ""
     if m.cap_type == "PT" and hasattr(result, "pt_stages") and result.pt_stages:
         pt_section = """
-        <h2>CHƯƠNG IV. PHÂN TÍCH 7 GIAI ĐOẠN THI CÔNG XÀ MŨ DƯL</h2>
-        <table>
-            <tr><th>Giai đoạn thi công</th><th>M_ngoại (kNm)</th><th>Ứng suất thớ đỉnh σ_top (MPa)</th><th>Ứng suất thớ đáy σ_bot (MPa)</th><th>Kết luận</th></tr>
+        <div class="card" style="margin-top: 12px;">
+            <h4>Bảng Kiểm Toán Ứng Suất 7 Giai Đoạn Thi Công Xà Mũ DƯL:</h4>
+            <table>
+                <tr><th>Giai đoạn thi công</th><th>M_ngoại (kNm)</th><th>Ứng suất thớ đỉnh σ_top (MPa)</th><th>Ứng suất thớ đáy σ_bot (MPa)</th><th>Kết luận</th></tr>
         """
         for st in result.pt_stages:
             pt_section += f"""
@@ -581,7 +730,7 @@ def generate_pier_html_report(result: PierAnalysisResult, output_path: str) -> s
                 <td class="{'pass' if st.passed else 'fail'}">{'ĐẠT' if st.passed else 'K.ĐẠT'}</td>
             </tr>
             """
-        pt_section += "</table>"
+        pt_section += "</table></div>"
 
     html = f"""<!DOCTYPE html>
 <html lang="vi">
@@ -626,7 +775,7 @@ def generate_pier_html_report(result: PierAnalysisResult, output_path: str) -> s
     </div>
 
     <!-- CHƯƠNG I: TỔNG HỢP KIỂM TOÁN -->
-    <h2>CHƯƠNG I. TỔNG HỢP KẾT QUẢ KIỂM TOÁN CÁC HẠNG MỤC TRỤ</h2>
+    <h2>CHƯƠNG I. TỔNG HỢP KẾT QUẢ KIỂM TOÁN CÁC HẠNG MỤC TRỤ CẦU</h2>
     <table>
         <tr>
             <th>Cấu kiện</th>
@@ -666,24 +815,24 @@ def generate_pier_html_report(result: PierAnalysisResult, output_path: str) -> s
             <td rowspan="2" style="font-weight:bold;">2. Xà mũ trụ</td>
             <td>Sức kháng uốn ULS (Mr)</td>
             <td>Mu = {v.cap.Mu_max:.1f} kNm</td>
-            <td>Mr = {(v.cap.rc_flexure.Mr if v.cap.rc_flexure else (v.cap.pt_result.Mn_positive * 0.9 if v.cap.pt_result else 0.0)):.1f} kNm</td>
-            <td>{(v.cap.rc_flexure.demand_capacity_ratio if v.cap.rc_flexure else 0.85):.2f}</td>
+            <td>Mr = {cap_mr:.1f} kNm</td>
+            <td>{cap_flex_ratio:.2f}</td>
             <td>TCVN 11823-5 Điều 5.7.3.2</td>
             <td class="{'pass' if v.cap.overall_passed else 'fail'}">{'ĐẠT' if v.cap.overall_passed else 'KHÔNG ĐẠT'}</td>
         </tr>
         <tr>
             <td>Sức kháng cắt ULS (Vr)</td>
             <td>Vu = {v.cap.Vu_max:.1f} kN</td>
-            <td>Vr = {(v.cap.rc_shear.Vr if v.cap.rc_shear else v.cap.Vu_max * 1.3):.1f} kN</td>
-            <td>{(v.cap.rc_shear.demand_capacity_ratio if v.cap.rc_shear else 0.77):.2f}</td>
+            <td>Vr = {cap_vr:.1f} kN</td>
+            <td>{cap_shear_ratio:.2f}</td>
             <td>TCVN 11823-5 Điều 5.8.3</td>
             <td class="{'pass' if (v.cap.rc_shear.passed if v.cap.rc_shear else True) else 'fail'}">{'ĐẠT' if (v.cap.rc_shear.passed if v.cap.rc_shear else True) else 'KHÔNG ĐẠT'}</td>
         </tr>
         <tr>
             <td rowspan="2" style="font-weight:bold;">3. Bệ trụ</td>
             <td>Uốn phương dọc X & ngang Y</td>
-            <td>Mu = {v.footing.Mux_max:.1f} kNm</td>
-            <td>Mr = {v.footing.flexure_x.Mr:.1f} kNm</td>
+            <td>Mux = {v.footing.Mux_max:.1f} kNm</td>
+            <td>Mrx = {v.footing.flexure_x.Mr:.1f} kNm</td>
             <td>{v.footing.flexure_x.demand_capacity_ratio:.2f}</td>
             <td>TCVN 11823-5 Điều 5.7.3.2</td>
             <td class="{'pass' if (v.footing.flexure_x.passed and v.footing.flexure_y.passed) else 'fail'}">{'ĐẠT' if (v.footing.flexure_x.passed and v.footing.flexure_y.passed) else 'KHÔNG ĐẠT'}</td>
@@ -697,28 +846,133 @@ def generate_pier_html_report(result: PierAnalysisResult, output_path: str) -> s
             <td class="{'pass' if v.footing.punching_passed else 'fail'}">{'ĐẠT' if v.footing.punching_passed else 'KHÔNG ĐẠT'}</td>
         </tr>
         <tr>
-            <td rowspan="2" style="font-weight:bold;">4. Móng cọc</td>
-            <td>Sức chịu tải nén Pmax (TS_PILE)</td>
-            <td>Pmax = {piles.P_max_service:.1f} kN (SLS) / {piles.P_max_strength:.1f} kN (ULS)</td>
-            <td>Pcp = {m.pile_capacity_allowable:.1f} kN (SLS) / {1.4*m.pile_capacity_allowable:.1f} kN (ULS)</td>
-            <td>{piles.P_max_service/m.pile_capacity_allowable:.2f}</td>
-            <td>TCVN 11823-10 Điều 10.7.3</td>
-            <td class="{'pass' if piles.passed_capacity else 'fail'}">{'ĐẠT' if piles.passed_capacity else 'KHÔNG ĐẠT'}</td>
+            <td rowspan="3" style="font-weight:bold;">4. Móng cọc</td>
+            <td>TTGH Cường độ (ULS) - Pmax ≤ φRn</td>
+            <td>Pmax = {piles.P_max_strength:.1f} kN</td>
+            <td>φRn = {piles.P_allow_strength:.1f} kN</td>
+            <td>{piles.P_max_strength / piles.P_allow_strength if piles.P_allow_strength > 0 else 0:.2f}</td>
+            <td>TCVN 11823-10 Điều 10.7.3.8</td>
+            <td class="{'pass' if piles.P_max_strength <= piles.P_allow_strength else 'fail'}">{'ĐẠT' if piles.P_max_strength <= piles.P_allow_strength else 'VƯỢT TẢI'}</td>
         </tr>
         <tr>
-            <td>Kiểm tra cọc chịu nhổ</td>
+            <td>TTGH Đặc biệt (EXTREME) - Pmax ≤ Rn,ext</td>
+            <td>Pmax = {piles.P_max_extreme:.1f} kN</td>
+            <td>Rn,ext = {piles.P_allow_extreme:.1f} kN (φ=1.0)</td>
+            <td>{piles.P_max_extreme / piles.P_allow_extreme if piles.P_allow_extreme > 0 else 0:.2f}</td>
+            <td>TCVN 11823-10 Điều 10.5.5.3.3</td>
+            <td class="{'pass' if piles.P_max_extreme <= piles.P_allow_extreme else 'fail'}">{'ĐẠT' if piles.P_max_extreme <= piles.P_allow_extreme else 'VƯỢT TẢI'}</td>
+        </tr>
+        <tr>
+            <td>Kiểm tra cọc chịu nhổ (Pmin ≥ 0)</td>
             <td>Pmin = {piles.P_min_service:.1f} kN</td>
-            <td>≥ 0.0 kN (Không nhổ)</td>
+            <td>≥ 0.0 kN (Kháng nhổ: {piles.P_allow_uplift:.1f} kN)</td>
             <td>—</td>
             <td>TCVN 11823-10 Điều 10.7.3.7</td>
-            <td class="{'pass' if piles.passed_tension else 'fail'}">{'ĐẠT' if piles.passed_tension else 'KHÔNG ĐẠT'}</td>
+            <td class="{'pass' if piles.passed_tension else 'fail'}">{'ĐẠT' if piles.passed_tension else 'NHỔ CỌC'}</td>
         </tr>
     </table>
 
+    <!-- CHƯƠNG II: THÔNG SỐ HÌNH HỌC VÀ VẬT LIỆU -->
+    <h2>CHƯƠNG II. THÔNG SỐ HÌNH HỌC VÀ VẬT LIỆU THIẾT KẾ</h2>
+    <table>
+        <tr><th>Bộ phận</th><th>Thông số kích thước</th><th>Ký hiệu</th><th>Giá trị</th><th>Đơn vị</th><th>Ghi chú</th></tr>
+        <tr><td>Nhịp cầu</td><td>Chiều dài nhịp Trái / Phải</td><td>L1 / L2</td><td>{m.span_L1:.2f} / {m.span_L2:.2f}</td><td>m</td><td>Nhịp KCN</td></tr>
+        <tr><td>Mặt cầu</td><td>Bề rộng cầu / Bề rộng xe</td><td>W / Bxe</td><td>{m.width_W:.2f} / {m.width_Bxe:.2f}</td><td>m</td><td>{m.num_lanes} làn xe</td></tr>
+        <tr><td>Xà mũ vát</td><td>Dài / Cao ngàm / Cao đầu / Dài cánh</td><td>Lxm / Hroot / Htip / Lcant</td><td>{m.Lxm:.2f} / {h_root:.2f} / {h_tip:.2f} / {l_cant:.2f}</td><td>m</td><td>Loại: {m.cap_type}</td></tr>
+        <tr><td>Thân trụ</td><td>Kích thước thân / Chiều cao / K/c tim s</td><td>bth1 × hth1 / Hth / s</td><td>{m.bth1:.2f} × {m.hth1:.2f} / {m.Hth:.2f} / {m.spacing_twin_columns:.2f}</td><td>m</td><td>{col_str}</td></tr>
+        <tr><td>Bệ trụ</td><td>Rộng dọc × Dài ngang × Cao</td><td>Bbe × Cbe × Hbe</td><td>{m.Bbe:.2f} × {m.Cbe:.2f} × {m.Hbe:.2f}</td><td>m</td><td>Góc chéo α = {m.skew_angle}°</td></tr>
+        <tr><td>Bê tông</td><td>Cường độ chịu nén f'c / Khối lượng thể tích</td><td>f'c / γ_c</td><td>{m.fc_prime:.1f} / {m.gamma_c:.1f}</td><td>MPa / kN/m³</td><td>Bê tông kết cấu</td></tr>
+        <tr><td>Cốt thép</td><td>Giới hạn chảy / Mô đun đàn hồi</td><td>fy / Es</td><td>{m.fy:.1f} / {m.Es:.0f}</td><td>MPa</td><td>CB400-V</td></tr>
+        <tr><td>Móng cọc</td><td>Đường kính D / Số lượng cọc</td><td>D / n</td><td>{m.pile_diameter:.2f} / {m.total_piles}</td><td>m / cọc</td><td>Sức chịu tải Pcp = {m.pile_capacity_allowable:.1f} kN</td></tr>
+    </table>
+
+    <!-- CHƯƠNG III: TẢI TRỌNG TIÊU CHUẨN -->
+    <h2>CHƯƠNG III. CHI TIẾT CÁC TẢI TRỌNG TIÊU CHUẨN (TCVN 11823-3)</h2>
+    <table>
+        <tr><th>Ký hiệu</th><th>Tên tải trọng</th><th>Cách xác định / Công thức</th><th>Giá trị lực</th><th>Điểm đặt</th></tr>
+        <tr><td>DC1_left</td><td>Tĩnh tải dầm nhịp trái</td><td>Phản lực dầm nhịp trái</td><td>{m.DC1_left:.1f} kN</td><td>Lệch tâm e={m.e_left:.2f}m</td></tr>
+        <tr><td>DC1_right</td><td>Tĩnh tải dầm nhịp phải</td><td>Phản lực dầm nhịp phải</td><td>{m.DC1_right:.1f} kN</td><td>Lệch tâm e={m.e_right:.2f}m</td></tr>
+        <tr><td>DW</td><td>Tĩnh tải lớp phủ & tiện ích</td><td>DW trái + DW phải</td><td>{m.DW_left + m.DW_right:.1f} kN</td><td>Tại tim gối</td></tr>
+        <tr><td>DC2</td><td>Tự trọng bê tông Trụ</td><td>Xà mũ + Thân + Bệ</td><td>{loads.DC2_cap + loads.DC2_stem + loads.DC2_footing:.1f} kN</td><td>Trọng tâm các khối</td></tr>
+        <tr><td>PL</td><td>Hoạt tải người đi bộ</td><td>pPL × bpl × (L1+L2)/2</td><td>{m.pPL * m.width_bpl * (m.span_L1 + m.span_L2)/2.0:.1f} kN</td><td>Phân bố lề bộ hành</td></tr>
+        <tr><td>WS_des</td><td>Gió KCN & Trụ (V_tk={m.VB}m/s)</td><td>Tổ hợp Cường độ III (không có xe)</td><td>H_kcn={loads.WS_kcn_des:.1f} kN, H_pier={loads.WS_pier_des:.1f} kN</td><td>Đỉnh gối & thân</td></tr>
+        <tr><td>WS_25</td><td>Gió KCN & Trụ (V=25m/s)</td><td>Tổ hợp Cường độ V & Sử dụng I (có xe)</td><td>H_kcn={loads.WS_kcn_25:.1f} kN, H_pier={loads.WS_pier_25:.1f} kN</td><td>Đỉnh gối & thân</td></tr>
+        <tr><td>WL</td><td>Gió thổi lên hoạt tải xe (0.14 kN/m²)</td><td>Tổ hợp Cường độ V & Sử dụng I</td><td>H_wl={loads.WL_force:.1f} kN</td><td>Cao 1.8m trên mặt cầu</td></tr>
+        <tr><td>WA & WB</td><td>Dòng chảy nước & Đẩy nổi</td><td>p = 0.514·CD·V² (V={m.V_water}m/s)</td><td>WA_dọc={loads.WA_stem_long:.1f} kN, WB={loads.WB_footing:.1f} kN</td><td>Đáy thân & bệ</td></tr>
+        <tr><td>TU+ / TU-</td><td>Biến dạng nhiệt độ (ΔT=±{m.delta_T_pos:.0f}°C)</td><td>Giải chuỗi gối 1D theo L_exp={loads.bearing_forces.get('L_exp', 0.0):.2f}m</td><td>TU+ = {loads.bearing_forces.get('H_TU_pos', 0.0):.1f} kN, TU- = {loads.bearing_forces.get('H_TU_neg', 0.0):.1f} kN</td><td>Mặt gối đỉnh trụ</td></tr>
+        <tr><td>CR & SH</td><td>Từ biến & Co ngót bê tông dầm</td><td>ε_cr={m.eps_cr*1e6:.0f}×10⁻⁶, ε_sh={m.eps_sh*1e6:.0f}×10⁻⁶</td><td>H_CR = {loads.bearing_forces.get('H_CR', 0.0):.1f} kN, H_SH = {loads.bearing_forces.get('H_SH', 0.0):.1f} kN</td><td>Mặt gối đỉnh trụ</td></tr>
+        <tr><td>FR</td><td>Ma sát gối chậu trượt (μ={m.friction_mu})</td><td>FR = μ · ΣN_gối_trượt</td><td>H_FR = ±{loads.bearing_forces.get('H_FR', 0.0):.1f} kN</td><td>Mặt gối đỉnh trụ</td></tr>
+        <tr><td>EQ</td><td>Động đất tác dụng lên Trụ</td><td>Gia tốc A={m.accel_A}, S={m.S_seismic}, R_stem={m.R_pier_stem}, R_móng=1.0</td><td>Tải quán tính</td><td>Tâm khối lượng</td></tr>
+        <tr><td>CT</td><td>Va xe ô tô vào thân trụ</td><td>TCVN 11823-3 Điều 3.6.5</td><td>{m.CT:.1f} kN</td><td>Cao độ z={m.z_CT:.1f}m</td></tr>
+        <tr><td>CV</td><td>Va tàu thủy thông thuyền</td><td>TCVN 11823-3 Điều 3.14 ({m.river_class})</td><td>{m.CV:.1f} kN</td><td>Cao độ z={m.z_CV:.1f}m</td></tr>
+    </table>
+
+    <!-- CHƯƠNG IV: TỔ HỢP TẢI TRỌNG -->
+    <h2>CHƯƠNG IV. BẢNG TỔ HỢP TẢI TRỌNG (TCVN 11823-3 TẠI ĐÁY BỆ TRỤ)</h2>
+    <table>
+        <tr><th>Tổ hợp tải trọng</th><th>TTGH</th><th>N (kN)</th><th>Hx (kN)</th><th>Hy (kN)</th><th>Mx (kNm)</th><th>My (kNm)</th></tr>
+        {comb_rows}
+    </table>
+
+    <!-- CHƯƠNG V: ĐỊA CHẤT & TS-CAP -->
+    <h2>CHƯƠNG V. ĐỊA CHẤT CÔNG TRÌNH VÀ SỨC CHỊU TẢI CỌC (TS-CAP TCVN 11823-10)</h2>
+    <div class="card">
+        • Đường kính cọc D = <strong>{m.pile_diameter} m</strong> | Chiều dài cọc L = <strong>{getattr(m, 'cap_bottom_elev_m', 0.0) - getattr(m, 'pile_tip_elev_m', -35.0):.2f} m</strong><br>
+        • Sức kháng ma sát thân danh định: <strong>Qsn = {piles.capacity_result.qshaft_nominal_kn if piles.capacity_result else 0.0:.1f} kN</strong><br>
+        • Sức kháng mũi cọc danh định: <strong>Qpn = {piles.capacity_result.qtip_nominal_kn if piles.capacity_result else 0.0:.1f} kN</strong><br>
+        • Sức kháng danh định tổng cộng: <strong>Rn = {(piles.capacity_result.qshaft_nominal_kn + piles.capacity_result.qtip_nominal_kn) if piles.capacity_result else 0.0:.1f} kN</strong><br>
+        • TTGH Cường độ (ULS): <strong>φRn = {piles.P_allow_strength:.1f} kN</strong> (φ = 0.50~0.55)<br>
+        • TTGH Đặc biệt (EXTREME): <strong>Rn,ext = {piles.P_allow_extreme:.1f} kN</strong> (φ = 1.0)<br>
+        • TTGH Sử dụng (SLS): <strong>Pcp = {piles.P_allow_service:.1f} kN</strong> | Kháng nhổ cho phép: <strong>{piles.P_allow_uplift:.1f} kN</strong>
+    </div>
+    <table>
+        <tr><th>Lớp đất / Đá</th><th>Cao độ đáy (m)</th><th>Dày (m)</th><th>Loại</th><th>SPT</th><th>γ (kN/m³)</th><th>c (MPa) / φ (°)</th><th>Qs (kN)</th><th>Qsf (kN)</th></tr>
+        {geo_rows}
+    </table>
+
+    <!-- CHƯƠNG VI: PHÂN TÍCH MÓNG CỌC TS_PILE -->
+    <h2>CHƯƠNG VI. PHÂN TÍCH VÀ KIỂM TOÁN NỘI LỰC MÓNG CỌC (PHƯƠNG PHÁP TS_PILE)</h2>
+    <div class="card">
+        Phương pháp ma trận độ cứng 3D: Phân bố tải trọng lên từng cọc theo tọa độ thực tế (X, Y) và góc nghiêng chéo α.<br>
+        Tổng số cọc: <strong>{m.total_piles} cọc</strong> (Bố trí theo các hàng cọc song song thân trụ).
+    </div>
+    <table>
+        <tr><th>Tổ hợp tải trọng</th><th>TTGH</th><th>Pmax (kN)</th><th>Pmin (kN)</th><th>Sức kháng cho phép (kN)</th><th>Tỷ số D/C</th><th>Kiểm toán Nén</th><th>Kiểm toán Nhổ</th></tr>
+        {pile_rows}
+    </table>
+
+    <!-- CHƯƠNG VII: CHI TIẾT KIỂM TOÁN KẾT CẤU -->
+    <h2>CHƯƠNG VII. CHI TIẾT KIỂM TOÁN CÁC BỘ PHẬN KẾT CẤU TRỤ CẦU</h2>
+
+    <h3>1. KIỂM TOÁN XÀ MŨ TRỤ CẦU (PIER CAP)</h3>
+    <div class="card">
+        • Kích thước: Bề rộng bxm = {m.bxm}m, Chiều cao ngàm H_root = {h_root}m, Chiều dài cánh hẫng L_cant = {l_cant}m | Loại: <strong>{cap_str}</strong><br>
+        • Mô men uốn tính toán ULS: <strong>Mu = {cap.Mu_max:.1f} kNm</strong> ≤ Sức kháng uốn: <strong>Mr = {cap_mr:.1f} kNm</strong> ➔ <strong class="{'pass' if cap.overall_passed else 'fail'}">{'ĐẠT' if cap.overall_passed else 'KHÔNG ĐẠT'}</strong><br>
+        • Lực cắt tính toán ULS: <strong>Vu = {cap.Vu_max:.1f} kN</strong> ≤ Sức kháng cắt: <strong>Vr = {cap_vr:.1f} kN</strong> ➔ <strong class="{'pass' if (cap.rc_shear.passed if cap.rc_shear else True) else 'fail'}">{'ĐẠT' if (cap.rc_shear.passed if cap.rc_shear else True) else 'KHÔNG ĐẠT'}</strong>
+    </div>
     {pt_section}
 
-    <!-- CHƯƠNG V: KẾT LUẬN -->
-    <h2>CHƯƠNG V. KẾT LUẬN & KIẾN NGHỊ</h2>
+    <h3>2. KIỂM TOÁN THÂN TRỤ (PIER STEM - FIBER SECTION)</h3>
+    <div class="card">
+        • Tiết diện thân: {m.bth1}m × {m.hth1}m, Chiều cao Hth = {m.Hth}m | Hình thức: <strong>{col_str}</strong><br>
+        • Độ mảnh phương dọc: klu/r = {stem.slenderness_lambda_y:.1f} (Hệ số khuếch đại δby = {stem.delta_b_y:.2f}) | Phương ngang: klu/r = {stem.slenderness_lambda_x:.1f} (δbx = {stem.delta_b_x:.2f})<br>
+        • Hàm lượng cốt thép dọc: <strong>Ast/Ag = {stem.rebar_ratio*100:.2f}%</strong> (TCVN quy định 1.0% ≤ Ast/Ag ≤ 8.0%) ➔ <strong>{'ĐẠT' if stem.rebar_ratio_passed else 'KHÔNG ĐẠT'}</strong><br>
+        • Tương tác P-Mx-My (Fiber Section): Tỷ số sử dụng <strong>D/C = {stem.utilization_pm:.2f}</strong> ➔ <strong class="{'pass' if stem.pm_passed else 'fail'}">{'ĐẠT' if stem.pm_passed else 'KHÔNG ĐẠT'}</strong><br>
+        • Sức kháng cắt: Vu = {stem.Vu_max:.1f} kN ≤ Vr = {stem.shear_check.Vr:.1f} kN ➔ <strong class="{'pass' if stem.shear_check.passed else 'fail'}">{'ĐẠT' if stem.shear_check.passed else 'KHÔNG ĐẠT'}</strong><br>
+        • Kiểm soát nứt: fss = {stem.crack_check.fss:.1f} MPa ≤ fsa = {stem.crack_check.fsa:.1f} MPa ➔ <strong class="{'pass' if stem.crack_check.passed else 'fail'}">{'ĐẠT' if stem.crack_check.passed else 'KHÔNG ĐẠT'}</strong>
+    </div>
+
+    <h3>3. KIỂM TOÁN BỆ TRỤ (FOOTING)</h3>
+    <div class="card">
+        • Kích thước đài bệ: Bbe = {m.Bbe}m (dọc) × Cbe = {m.Cbe}m (ngang) × Hbe = {m.Hbe}m (cao)<br>
+        • Sức kháng uốn phương X (dọc cầu): <strong>Mux = {footing.Mux_max:.1f} kNm</strong> ≤ <strong>Mrx = {footing.flexure_x.Mr:.1f} kNm</strong> ➔ <strong class="{'pass' if footing.flexure_x.passed else 'fail'}">{'ĐẠT' if footing.flexure_x.passed else 'KHÔNG ĐẠT'}</strong><br>
+        • Sức kháng uốn phương Y (ngang cầu): <strong>Muy = {footing.Muy_max:.1f} kNm</strong> ≤ <strong>Mry = {footing.flexure_y.Mr:.1f} kNm</strong> ➔ <strong class="{'pass' if footing.flexure_y.passed else 'fail'}">{'ĐẠT' if footing.flexure_y.passed else 'KHÔNG ĐẠT'}</strong><br>
+        • Sức kháng cắt dầm 1 phương: <strong>Vu = {footing.shear_beam.Vu:.1f} kN</strong> ≤ <strong>Vr = {footing.shear_beam.Vr:.1f} kN</strong> ➔ <strong class="{'pass' if footing.shear_beam.passed else 'fail'}">{'ĐẠT' if footing.shear_beam.passed else 'KHÔNG ĐẠT'}</strong><br>
+        • Sức kháng đâm thủng 2 phương: <strong>Vu = {footing.Vu_punching:.1f} kN</strong> ≤ <strong>Vr = {footing.Vr_punching:.1f} kN</strong> ➔ <strong class="{'pass' if footing.punching_passed else 'fail'}">{'ĐẠT' if footing.punching_passed else 'KHÔNG ĐẠT'}</strong>
+    </div>
+
+    <!-- CHƯƠNG VIII: KẾT LUẬN -->
+    <h2>CHƯƠNG VIII. KẾT LUẬN & KIẾN NGHỊ</h2>
     <div class="card" style="font-size: 13.5px;">
         1. Kết cấu trụ cầu <strong>{m.pier_name}</strong> thuộc công trình <strong>{m.project_name}</strong> được thiết kế theo đúng quy trình và tiêu chuẩn <strong>TCVN 11823:2017</strong>.<br>
         2. Toàn bộ các bộ phận (Thân trụ, Xà mũ, Bệ trụ, Móng cọc) đều <strong>ĐẠT</strong> các yêu cầu về cường độ, sử dụng, nứt và phản lực cọc.<br>

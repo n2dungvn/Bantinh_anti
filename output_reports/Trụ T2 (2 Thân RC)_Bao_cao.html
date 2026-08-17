@@ -1,0 +1,1321 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Thuyết Minh Tính Toán Trụ Cầu - Trụ T2 (2 Thân RC)</title>
+    <style>
+        body { font-family: 'Segoe UI', Arial, sans-serif; background: #f1f5f9; color: #0f172a; line-height: 1.6; margin: 0; padding: 24px; }
+        .container { max-width: 1150px; margin: 0 auto; background: #fff; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.06); padding: 40px; }
+        .header { border-bottom: 2px solid #cbd5e1; padding-bottom: 20px; margin-bottom: 28px; display: flex; justify-content: space-between; align-items: center; }
+        h1 { color: #1e3a8a; font-size: 24px; margin: 0 0 6px 0; }
+        h2 { color: #1e40af; font-size: 17px; border-left: 4px solid #2563eb; padding-left: 12px; margin: 30px 0 16px 0; background: #f8fafc; padding-top: 6px; padding-bottom: 6px; }
+        h3 { color: #0f172a; font-size: 14.5px; margin: 18px 0 8px 0; font-weight: bold; }
+        table { width: 100%; border-collapse: collapse; margin: 12px 0 20px 0; font-size: 13px; }
+        th { background: #1e3a8a; color: #fff; text-align: left; padding: 9px 12px; font-weight: 600; border: 1px solid #cbd5e1; }
+        td { padding: 8px 12px; border: 1px solid #e2e8f0; }
+        tr:nth-child(even) td { background: #f8fafc; }
+        .pass { color: #16a34a; font-weight: bold; }
+        .fail { color: #dc2626; font-weight: bold; }
+        .formula { background: #f8fafc; border-left: 3px solid #3b82f6; padding: 8px 12px; font-family: 'Consolas', 'Courier New', monospace; font-size: 12.5px; margin: 8px 0; color: #1e293b; }
+        .btn-print { background: #2563eb; color: #fff; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: bold; }
+        .card { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px; margin-bottom: 16px; }
+        @media print {
+            body { padding: 0; background: #fff; }
+            .container { box-shadow: none; padding: 0; max-width: 100%; }
+            .btn-print { display: none; }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+
+    <div class="header">
+        <div>
+            <h1>THUYẾT MINH TÍNH TOÁN KẾT CẤU TRỤ CẦU</h1>
+            <div style="color: #475569; font-size: 14px;">Dự án: <strong>Cầu Km19+000</strong> | Hạng mục: <strong>Trụ T2 (2 Thân RC)</strong> | <strong>Trụ 2 Thân (Khoảng cách s = 6.5m)</strong> | <strong>Xà Mũ Bê Tông Cốt Thép Thường (RC)</strong></div>
+        </div>
+        <div style="text-align: right;">
+            <span style="background:#dc2626; color:#fff; padding:6px 16px; border-radius:999px; font-weight:bold; font-size:14px;">⚠ CẦN ĐIỀU CHỈNH THIẾT KẾ</span><br>
+            <button class="btn-print" onclick="window.print()" style="margin-top: 10px;">🖨️ In Báo Cáo / Xuất PDF</button>
+        </div>
+    </div>
+
+    <!-- CHƯƠNG I: TỔNG HỢP KIỂM TOÁN -->
+    <h2>CHƯƠNG I. TỔNG HỢP KẾT QUẢ KIỂM TOÁN CÁC HẠNG MỤC TRỤ CẦU</h2>
+    <table>
+        <tr>
+            <th>Cấu kiện</th>
+            <th>Nội dung kiểm toán</th>
+            <th>Nội lực tính toán</th>
+            <th>Sức kháng / Cho phép</th>
+            <th>Tỷ số D/C</th>
+            <th>Dẫn chứng TCVN</th>
+            <th>Kết luận</th>
+        </tr>
+        <tr>
+            <td rowspan="3" style="font-weight:bold;">1. Thân trụ</td>
+            <td>Tương tác P-Mx-My (Fiber)</td>
+            <td>Pu = 18684.5 kN</td>
+            <td>Biểu đồ P-M TCVN</td>
+            <td>0.56</td>
+            <td>TCVN 11823-5 Điều 5.7.4</td>
+            <td class="pass">ĐẠT</td>
+        </tr>
+        <tr>
+            <td>Sức kháng cắt ULS (Vr)</td>
+            <td>Vu = 646.8 kN</td>
+            <td>Vr = 8681.6 kN</td>
+            <td>0.07</td>
+            <td>TCVN 11823-5 Điều 5.8.3</td>
+            <td class="pass">ĐẠT</td>
+        </tr>
+        <tr>
+            <td>Kiểm soát nứt SLS (fss)</td>
+            <td>fss = 390.3 MPa</td>
+            <td>[fsa] = 240.0 MPa (s_max=88mm)</td>
+            <td>1.63</td>
+            <td>TCVN 11823-5 Điều 5.7.3.4</td>
+            <td class="fail">KHÔNG ĐẠT</td>
+        </tr>
+        <tr>
+            <td rowspan="2" style="font-weight:bold;">2. Xà mũ trụ</td>
+            <td>Sức kháng uốn ULS (Mr)</td>
+            <td>Mu = 84155.8 kNm</td>
+            <td>Mr = 33273.9 kNm</td>
+            <td>2.53</td>
+            <td>TCVN 11823-5 Điều 5.7.3.2</td>
+            <td class="fail">KHÔNG ĐẠT</td>
+        </tr>
+        <tr>
+            <td>Sức kháng cắt ULS (Vr)</td>
+            <td>Vu = 19296.1 kN</td>
+            <td>Vr = 8558.0 kN</td>
+            <td>2.25</td>
+            <td>TCVN 11823-5 Điều 5.8.3</td>
+            <td class="fail">KHÔNG ĐẠT</td>
+        </tr>
+        <tr>
+            <td rowspan="2" style="font-weight:bold;">3. Bệ trụ</td>
+            <td>Uốn phương dọc X & ngang Y</td>
+            <td>Mux = 60579.8 kNm</td>
+            <td>Mrx = 49813.9 kNm</td>
+            <td>0.74</td>
+            <td>TCVN 11823-5 Điều 5.7.3.2</td>
+            <td class="fail">KHÔNG ĐẠT</td>
+        </tr>
+        <tr>
+            <td>Đâm thủng bệ trụ</td>
+            <td>Vu = 5508.7 kN</td>
+            <td>Vr = 12060.7 kN</td>
+            <td>0.46</td>
+            <td>TCVN 11823-5 Điều 5.13.3.6</td>
+            <td class="pass">ĐẠT</td>
+        </tr>
+        <tr>
+            <td rowspan="3" style="font-weight:bold;">4. Móng cọc</td>
+            <td>TTGH Cường độ (ULS) - Pmax ≤ φRn</td>
+            <td>Pmax = 5508.7 kN</td>
+            <td>φRn = 6710.2 kN</td>
+            <td>0.82</td>
+            <td>TCVN 11823-10 Điều 10.7.3.8</td>
+            <td class="pass">ĐẠT</td>
+        </tr>
+        <tr>
+            <td>TTGH Đặc biệt (EXTREME) - Pmax ≤ Rn,ext</td>
+            <td>Pmax = 40188.9 kN</td>
+            <td>Rn,ext = 10927.1 kN (φ=1.0)</td>
+            <td>3.68</td>
+            <td>TCVN 11823-10 Điều 10.5.5.3.3</td>
+            <td class="fail">VƯỢT TẢI</td>
+        </tr>
+        <tr>
+            <td>Kiểm tra cọc chịu nhổ (Pmin ≥ 0)</td>
+            <td>Pmin = 754.1 kN</td>
+            <td>≥ 0.0 kN (Kháng nhổ: 4887.6 kN)</td>
+            <td>—</td>
+            <td>TCVN 11823-10 Điều 10.7.3.7</td>
+            <td class="pass">ĐẠT</td>
+        </tr>
+    </table>
+
+    <!-- CHƯƠNG II: THÔNG SỐ HÌNH HỌC VÀ VẬT LIỆU -->
+    <h2>CHƯƠNG II. THÔNG SỐ HÌNH HỌC VÀ VẬT LIỆU THIẾT KẾ</h2>
+    <table>
+        <tr><th>Bộ phận</th><th>Thông số kích thước</th><th>Ký hiệu</th><th>Giá trị</th><th>Đơn vị</th><th>Ghi chú</th></tr>
+        <tr><td>Nhịp cầu</td><td>Chiều dài nhịp Trái / Phải</td><td>L1 / L2</td><td>38.20 / 38.20</td><td>m</td><td>Nhịp KCN</td></tr>
+        <tr><td>Mặt cầu</td><td>Bề rộng cầu / Bề rộng xe</td><td>W / Bxe</td><td>23.75 / 22.75</td><td>m</td><td>6 làn xe</td></tr>
+        <tr><td>Xà mũ vát</td><td>Dài / Cao ngàm / Cao đầu / Dài cánh</td><td>Lxm / Hroot / Htip / Lcant</td><td>23.55 / 2.20 / 1.20 / 7.00</td><td>m</td><td>Loại: RC</td></tr>
+        <tr><td>Thân trụ</td><td>Kích thước thân / Chiều cao / K/c tim s</td><td>bth1 × hth1 / Hth / s</td><td>5.50 × 1.60 / 8.40 / 6.50</td><td>m</td><td>Trụ 2 Thân (Khoảng cách s = 6.5m)</td></tr>
+        <tr><td>Bệ trụ</td><td>Rộng dọc × Dài ngang × Cao</td><td>Bbe × Cbe × Hbe</td><td>6.00 × 14.50 × 2.00</td><td>m</td><td>Góc chéo α = 90.0°</td></tr>
+        <tr><td>Bê tông</td><td>Cường độ chịu nén f'c / Khối lượng thể tích</td><td>f'c / γ_c</td><td>30.0 / 24.5</td><td>MPa / kN/m³</td><td>Bê tông kết cấu</td></tr>
+        <tr><td>Cốt thép</td><td>Giới hạn chảy / Mô đun đàn hồi</td><td>fy / Es</td><td>400.0 / 200000</td><td>MPa</td><td>CB400-V</td></tr>
+        <tr><td>Móng cọc</td><td>Đường kính D / Số lượng cọc</td><td>D / n</td><td>1.20 / 10</td><td>m / cọc</td><td>Sức chịu tải Pcp = 4800.0 kN</td></tr>
+    </table>
+
+    <!-- CHƯƠNG III: TẢI TRỌNG TIÊU CHUẨN -->
+    <h2>CHƯƠNG III. CHI TIẾT CÁC TẢI TRỌNG TIÊU CHUẨN</h2>
+    <table>
+        <tr><th>Ký hiệu</th><th>Tên tải trọng</th><th>Cách xác định / Công thức</th><th>Giá trị lực</th><th>Điểm đặt</th></tr>
+        <tr><td>DC1_left</td><td>Tĩnh tải dầm nhịp trái</td><td>Phản lực dầm nhịp trái</td><td>6706.0 kN</td><td>Lệch tâm e=-0.90m</td></tr>
+        <tr><td>DC1_right</td><td>Tĩnh tải dầm nhịp phải</td><td>Phản lực dầm nhịp phải</td><td>6706.0 kN</td><td>Lệch tâm e=0.90m</td></tr>
+        <tr><td>DW</td><td>Tĩnh tải lớp phủ & tiện ích</td><td>DW trái + DW phải</td><td>1368.8 kN</td><td>Tại tim gối</td></tr>
+        <tr><td>DC2</td><td>Tự trọng bê tông Trụ</td><td>Xà mũ + Thân + Bệ</td><td>8230.3 kN</td><td>Trọng tâm các khối</td></tr>
+        <tr><td>PL</td><td>Hoạt tải người đi bộ</td><td>pPL × bpl × (L1+L2)/2</td><td>0.0 kN</td><td>Phân bố lề bộ hành</td></tr>
+        <tr><td>EQ</td><td>Động đất tác dụng lên Trụ</td><td>Gia tốc A=0.1108, S=1.2, R_stem=3.0, R_móng=1.0</td><td>Tải quán tính</td><td>Tâm khối lượng</td></tr>
+        <tr><td>CT</td><td>Va xe ô tô vào thân trụ</td><td>TCVN 11823-3 Điều 3.6.5</td><td>1800.0 kN</td><td>Cao độ z=3.2m</td></tr>
+        <tr><td>CV</td><td>Va tàu thủy thông thuyền</td><td>TCVN 11823-3 Điều 3.14 (Cấp III)</td><td>0.0 kN</td><td>Cao độ z=3.5m</td></tr>
+    </table>
+
+    <!-- CHƯƠNG IV: TỔ HỢP TẢI TRỌNG -->
+    <h2>CHƯƠNG IV. BẢNG TỔ HỢP TẢI TRỌNG (TCVN 11823-3 TẠI ĐÁY BỆ TRỤ)</h2>
+    <table>
+        <tr><th>Tổ hợp tải trọng</th><th>TTGH</th><th>N (kN)</th><th>Hx (kN)</th><th>Hy (kN)</th><th>Mx (kNm)</th><th>My (kNm)</th></tr>
+        
+        <tr>
+            <td><strong>CĐ I(a) max - 2 nhịp lệch tâm 1 làn</strong></td>
+            <td>STRENGTH</td>
+            <td>31516.2</td>
+            <td>1293.6</td>
+            <td>0.0</td>
+            <td>21630.8</td>
+            <td>21028.1</td>
+        </tr>
+        
+        <tr>
+            <td><strong>CĐ I(a) max - 2 nhịp lệch tâm 2 làn</strong></td>
+            <td>STRENGTH</td>
+            <td>33122.9</td>
+            <td>1293.6</td>
+            <td>0.0</td>
+            <td>28820.9</td>
+            <td>21028.1</td>
+        </tr>
+        
+        <tr>
+            <td><strong>CĐ I(a) max - 2 nhịp lệch tâm 3 làn</strong></td>
+            <td>STRENGTH</td>
+            <td>34227.6</td>
+            <td>1293.6</td>
+            <td>0.0</td>
+            <td>27528.0</td>
+            <td>21028.1</td>
+        </tr>
+        
+        <tr>
+            <td><strong>CĐ I(a) max - 2 nhịp lệch tâm 4 làn</strong></td>
+            <td>STRENGTH</td>
+            <td>34328.0</td>
+            <td>1293.6</td>
+            <td>0.0</td>
+            <td>18668.3</td>
+            <td>21028.1</td>
+        </tr>
+        
+        <tr>
+            <td><strong>CĐ I(a) max - 2 nhịp lệch tâm 5 làn</strong></td>
+            <td>STRENGTH</td>
+            <td>35633.4</td>
+            <td>1293.6</td>
+            <td>0.0</td>
+            <td>11586.1</td>
+            <td>21028.1</td>
+        </tr>
+        
+        <tr>
+            <td><strong>CĐ I(a) max - 2 nhịp lệch tâm 6 làn</strong></td>
+            <td>STRENGTH</td>
+            <td>36938.9</td>
+            <td>1293.6</td>
+            <td>0.0</td>
+            <td>-195.8</td>
+            <td>21028.1</td>
+        </tr>
+        
+        <tr>
+            <td><strong>CĐ I(a) max - 2 nhịp đúng tâm 1 làn</strong></td>
+            <td>STRENGTH</td>
+            <td>31516.2</td>
+            <td>1293.6</td>
+            <td>0.0</td>
+            <td>0.0</td>
+            <td>21028.1</td>
+        </tr>
+        
+        <tr>
+            <td><strong>CĐ I(a) max - 2 nhịp đúng tâm 2 làn</strong></td>
+            <td>STRENGTH</td>
+            <td>33122.9</td>
+            <td>1293.6</td>
+            <td>0.0</td>
+            <td>0.0</td>
+            <td>21028.1</td>
+        </tr>
+        
+        <tr>
+            <td><strong>CĐ I(a) max - 2 nhịp đúng tâm 3 làn</strong></td>
+            <td>STRENGTH</td>
+            <td>34227.6</td>
+            <td>1293.6</td>
+            <td>0.0</td>
+            <td>0.0</td>
+            <td>21028.1</td>
+        </tr>
+        
+        <tr>
+            <td><strong>CĐ I(a) max - 2 nhịp đúng tâm 4 làn</strong></td>
+            <td>STRENGTH</td>
+            <td>34328.0</td>
+            <td>1293.6</td>
+            <td>0.0</td>
+            <td>0.0</td>
+            <td>21028.1</td>
+        </tr>
+        
+        <tr>
+            <td><strong>CĐ I(a) max - 2 nhịp đúng tâm 5 làn</strong></td>
+            <td>STRENGTH</td>
+            <td>35633.4</td>
+            <td>1293.6</td>
+            <td>0.0</td>
+            <td>0.0</td>
+            <td>21028.1</td>
+        </tr>
+        
+        <tr>
+            <td><strong>CĐ I(a) max - 2 nhịp đúng tâm 6 làn</strong></td>
+            <td>STRENGTH</td>
+            <td>36938.9</td>
+            <td>1293.6</td>
+            <td>0.0</td>
+            <td>0.0</td>
+            <td>21028.1</td>
+        </tr>
+        
+        <tr>
+            <td><strong>CĐ I(a) max - 1 nhịp 1 làn</strong></td>
+            <td>STRENGTH</td>
+            <td>30311.1</td>
+            <td>1293.6</td>
+            <td>0.0</td>
+            <td>10815.4</td>
+            <td>22112.7</td>
+        </tr>
+        
+        <tr>
+            <td><strong>CĐ I(a) max - 1 nhịp 2 làn</strong></td>
+            <td>STRENGTH</td>
+            <td>31114.5</td>
+            <td>1293.6</td>
+            <td>0.0</td>
+            <td>14410.5</td>
+            <td>22835.7</td>
+        </tr>
+        
+        <tr>
+            <td><strong>CĐ I(a) max - 1 nhịp 3 làn</strong></td>
+            <td>STRENGTH</td>
+            <td>31666.8</td>
+            <td>1293.6</td>
+            <td>0.0</td>
+            <td>13764.0</td>
+            <td>23332.8</td>
+        </tr>
+        
+        <tr>
+            <td><strong>CĐ I(a) max - 1 nhịp 4 làn</strong></td>
+            <td>STRENGTH</td>
+            <td>31717.0</td>
+            <td>1293.6</td>
+            <td>0.0</td>
+            <td>9334.2</td>
+            <td>23378.0</td>
+        </tr>
+        
+        <tr>
+            <td><strong>CĐ I(a) max - 1 nhịp 5 làn</strong></td>
+            <td>STRENGTH</td>
+            <td>32369.8</td>
+            <td>1293.6</td>
+            <td>0.0</td>
+            <td>5793.1</td>
+            <td>23965.5</td>
+        </tr>
+        
+        <tr>
+            <td><strong>CĐ I(a) max - 1 nhịp 6 làn</strong></td>
+            <td>STRENGTH</td>
+            <td>33022.5</td>
+            <td>1293.6</td>
+            <td>0.0</td>
+            <td>-97.9</td>
+            <td>24552.9</td>
+        </tr>
+        
+        <tr>
+            <td><strong>CĐ I(b) min - 1 nhịp 1 làn</strong></td>
+            <td>STRENGTH</td>
+            <td>21572.9</td>
+            <td>1293.6</td>
+            <td>0.0</td>
+            <td>10815.4</td>
+            <td>18269.7</td>
+        </tr>
+        
+        <tr>
+            <td><strong>CĐ I(b) min - 1 nhịp 6 làn</strong></td>
+            <td>STRENGTH</td>
+            <td>24284.2</td>
+            <td>1293.6</td>
+            <td>0.0</td>
+            <td>-97.9</td>
+            <td>20709.9</td>
+        </tr>
+        
+        <tr>
+            <td><strong>CĐ III(a) max</strong></td>
+            <td>STRENGTH</td>
+            <td>29106.1</td>
+            <td>795.2</td>
+            <td>282.6</td>
+            <td>3460.2</td>
+            <td>12304.1</td>
+        </tr>
+        
+        <tr>
+            <td><strong>CĐ III(b) min</strong></td>
+            <td>STRENGTH</td>
+            <td>20367.8</td>
+            <td>795.2</td>
+            <td>282.6</td>
+            <td>3460.2</td>
+            <td>8461.1</td>
+        </tr>
+        
+        <tr>
+            <td><strong>CĐ IV</strong></td>
+            <td>STRENGTH</td>
+            <td>34516.6</td>
+            <td>0.0</td>
+            <td>0.0</td>
+            <td>0.0</td>
+            <td>0.0</td>
+        </tr>
+        
+        <tr>
+            <td><strong>CĐ V - 1 làn</strong></td>
+            <td>STRENGTH</td>
+            <td>30965.3</td>
+            <td>1193.0</td>
+            <td>82.9</td>
+            <td>17968.6</td>
+            <td>19287.3</td>
+        </tr>
+        
+        <tr>
+            <td><strong>CĐ V - 6 làn</strong></td>
+            <td>STRENGTH</td>
+            <td>35148.6</td>
+            <td>1193.0</td>
+            <td>82.9</td>
+            <td>1131.0</td>
+            <td>19287.3</td>
+        </tr>
+        
+        <tr>
+            <td><strong>SD I - 2 nhịp lệch tâm 1 làn</strong></td>
+            <td>SERVICE</td>
+            <td>24388.3</td>
+            <td>1080.7</td>
+            <td>75.8</td>
+            <td>13556.4</td>
+            <td>21211.2</td>
+        </tr>
+        
+        <tr>
+            <td><strong>SD I - 2 nhịp lệch tâm 2 làn</strong></td>
+            <td>SERVICE</td>
+            <td>25306.4</td>
+            <td>1080.7</td>
+            <td>75.8</td>
+            <td>17665.1</td>
+            <td>21211.2</td>
+        </tr>
+        
+        <tr>
+            <td><strong>SD I - 2 nhịp lệch tâm 3 làn</strong></td>
+            <td>SERVICE</td>
+            <td>25937.7</td>
+            <td>1080.7</td>
+            <td>75.8</td>
+            <td>16926.3</td>
+            <td>21211.2</td>
+        </tr>
+        
+        <tr>
+            <td><strong>SD I - 2 nhịp lệch tâm 4 làn</strong></td>
+            <td>SERVICE</td>
+            <td>25995.0</td>
+            <td>1080.7</td>
+            <td>75.8</td>
+            <td>11863.6</td>
+            <td>21211.2</td>
+        </tr>
+        
+        <tr>
+            <td><strong>SD I - 2 nhịp lệch tâm 5 làn</strong></td>
+            <td>SERVICE</td>
+            <td>26741.0</td>
+            <td>1080.7</td>
+            <td>75.8</td>
+            <td>7816.6</td>
+            <td>21211.2</td>
+        </tr>
+        
+        <tr>
+            <td><strong>SD I - 2 nhịp lệch tâm 6 làn</strong></td>
+            <td>SERVICE</td>
+            <td>27487.0</td>
+            <td>1080.7</td>
+            <td>75.8</td>
+            <td>1084.1</td>
+            <td>21211.2</td>
+        </tr>
+        
+        <tr>
+            <td><strong>SD I - 2 nhịp đúng tâm 1 làn</strong></td>
+            <td>SERVICE</td>
+            <td>24388.3</td>
+            <td>1055.9</td>
+            <td>0.0</td>
+            <td>0.0</td>
+            <td>20800.1</td>
+        </tr>
+        
+        <tr>
+            <td><strong>SD I - 2 nhịp đúng tâm 2 làn</strong></td>
+            <td>SERVICE</td>
+            <td>25306.4</td>
+            <td>1055.9</td>
+            <td>0.0</td>
+            <td>0.0</td>
+            <td>20800.1</td>
+        </tr>
+        
+        <tr>
+            <td><strong>SD I - 2 nhịp đúng tâm 3 làn</strong></td>
+            <td>SERVICE</td>
+            <td>25937.7</td>
+            <td>1055.9</td>
+            <td>0.0</td>
+            <td>0.0</td>
+            <td>20800.1</td>
+        </tr>
+        
+        <tr>
+            <td><strong>SD I - 2 nhịp đúng tâm 4 làn</strong></td>
+            <td>SERVICE</td>
+            <td>25995.0</td>
+            <td>1055.9</td>
+            <td>0.0</td>
+            <td>0.0</td>
+            <td>20800.1</td>
+        </tr>
+        
+        <tr>
+            <td><strong>SD I - 2 nhịp đúng tâm 5 làn</strong></td>
+            <td>SERVICE</td>
+            <td>26741.0</td>
+            <td>1055.9</td>
+            <td>0.0</td>
+            <td>0.0</td>
+            <td>20800.1</td>
+        </tr>
+        
+        <tr>
+            <td><strong>SD I - 2 nhịp đúng tâm 6 làn</strong></td>
+            <td>SERVICE</td>
+            <td>27487.0</td>
+            <td>1055.9</td>
+            <td>0.0</td>
+            <td>0.0</td>
+            <td>20800.1</td>
+        </tr>
+        
+        <tr>
+            <td><strong>SD I - 1 nhịp 1 làn</strong></td>
+            <td>SERVICE</td>
+            <td>23699.7</td>
+            <td>1055.9</td>
+            <td>0.0</td>
+            <td>6180.2</td>
+            <td>21419.8</td>
+        </tr>
+        
+        <tr>
+            <td><strong>SD I - 1 nhịp 2 làn</strong></td>
+            <td>SERVICE</td>
+            <td>24158.8</td>
+            <td>1055.9</td>
+            <td>0.0</td>
+            <td>8234.5</td>
+            <td>21833.0</td>
+        </tr>
+        
+        <tr>
+            <td><strong>SD I - 1 nhịp 3 làn</strong></td>
+            <td>SERVICE</td>
+            <td>24474.4</td>
+            <td>1055.9</td>
+            <td>0.0</td>
+            <td>7865.1</td>
+            <td>22117.1</td>
+        </tr>
+        
+        <tr>
+            <td><strong>SD I - 1 nhịp 4 làn</strong></td>
+            <td>SERVICE</td>
+            <td>24503.1</td>
+            <td>1055.9</td>
+            <td>0.0</td>
+            <td>5333.8</td>
+            <td>22142.9</td>
+        </tr>
+        
+        <tr>
+            <td><strong>SD I - 1 nhịp 5 làn</strong></td>
+            <td>SERVICE</td>
+            <td>24876.1</td>
+            <td>1055.9</td>
+            <td>0.0</td>
+            <td>3310.3</td>
+            <td>22478.6</td>
+        </tr>
+        
+        <tr>
+            <td><strong>SD I - 1 nhịp 6 làn</strong></td>
+            <td>SERVICE</td>
+            <td>25249.1</td>
+            <td>1055.9</td>
+            <td>0.0</td>
+            <td>-55.9</td>
+            <td>22814.3</td>
+        </tr>
+        
+        <tr>
+            <td><strong>SD III - 1 làn</strong></td>
+            <td>SERVICE</td>
+            <td>24112.9</td>
+            <td>0.0</td>
+            <td>0.0</td>
+            <td>9888.3</td>
+            <td>0.0</td>
+        </tr>
+        
+        <tr>
+            <td><strong>SD III - 6 làn</strong></td>
+            <td>SERVICE</td>
+            <td>26591.8</td>
+            <td>0.0</td>
+            <td>0.0</td>
+            <td>-89.5</td>
+            <td>0.0</td>
+        </tr>
+        
+        <tr>
+            <td><strong>ĐB I - EQ dọc</strong></td>
+            <td>EXTREME</td>
+            <td>31344.0</td>
+            <td>6394.9</td>
+            <td>0.0</td>
+            <td>0.0</td>
+            <td>72428.9</td>
+        </tr>
+        
+        <tr>
+            <td><strong>ĐB I - EQ ngang</strong></td>
+            <td>EXTREME</td>
+            <td>31344.0</td>
+            <td>0.0</td>
+            <td>6394.9</td>
+            <td>72428.9</td>
+            <td>0.0</td>
+        </tr>
+        
+        <tr>
+            <td><strong>ĐB II - Va xe (CT=1800kN)</strong></td>
+            <td>EXTREME</td>
+            <td>31344.0</td>
+            <td>1800.0</td>
+            <td>0.0</td>
+            <td>0.0</td>
+            <td>5760.0</td>
+        </tr>
+        
+        <tr>
+            <td><strong>ĐB III - Va tàu (CV)</strong></td>
+            <td>EXTREME</td>
+            <td>31344.0</td>
+            <td>155109.7</td>
+            <td>0.0</td>
+            <td>0.0</td>
+            <td>542884.0</td>
+        </tr>
+        
+    </table>
+
+    <!-- CHƯƠNG V: ĐỊA CHẤT & TS-CAP -->
+    <h2>CHƯƠNG V. ĐỊA CHẤT CÔNG TRÌNH VÀ SỨC CHỊU TẢI CỌC (TS-CAP TCVN 11823-10)</h2>
+    <div class="card">
+        • Đường kính cọc D = <strong>1.2 m</strong> | Chiều dài cọc L = <strong>35.00 m</strong><br>
+        • Sức kháng ma sát thân danh định: <strong>Qsn = 9883.6 kN</strong><br>
+        • Sức kháng mũi cọc danh định: <strong>Qpn = 2482.5 kN</strong><br>
+        • Sức kháng danh định tổng cộng: <strong>Rn = 12366.1 kN</strong><br>
+        • TTGH Cường độ (ULS): <strong>φRn = 6710.2 kN</strong> (φ = 0.50~0.55)<br>
+        • TTGH Đặc biệt (EXTREME): <strong>Rn,ext = 10927.1 kN</strong> (φ = 1.0)<br>
+        • TTGH Sử dụng (SLS): <strong>Pcp = 10927.1 kN</strong> | Kháng nhổ cho phép: <strong>4887.6 kN</strong>
+    </div>
+    <table>
+        <tr><th>Lớp đất / Đá</th><th>Cao độ đáy (m)</th><th>Dày (m)</th><th>Loại</th><th>SPT</th><th>γ (kN/m³)</th><th>c (MPa) / φ (°)</th><th>Qs (kN)</th><th>Qsf (kN)</th></tr>
+        
+            <tr>
+                <td><strong>Lớp 1: Bùn sét</strong></td>
+                <td>-5.00</td>
+                <td>5.00</td>
+                <td>Sét/đất dính</td>
+                <td>2</td>
+                <td>6.7</td>
+                <td>0.015 / 5.0°</td>
+                <td>87.1</td>
+                <td>39.2</td>
+            </tr>
+            
+            <tr>
+                <td><strong>Lớp 2: Sét pha dẻo mềm</strong></td>
+                <td>-15.00</td>
+                <td>10.00</td>
+                <td>Sét/đất dính</td>
+                <td>6</td>
+                <td>8.2</td>
+                <td>0.025 / 12.0°</td>
+                <td>746.4</td>
+                <td>335.9</td>
+            </tr>
+            
+            <tr>
+                <td><strong>Lớp 3: Cát hạt trung</strong></td>
+                <td>-28.00</td>
+                <td>13.00</td>
+                <td>Cát/đất rời</td>
+                <td>25</td>
+                <td>9.7</td>
+                <td>0.000 / 38.9°</td>
+                <td>4300.0</td>
+                <td>2365.0</td>
+            </tr>
+            
+            <tr>
+                <td><strong>Lớp 4: Sét cứng/IGM</strong></td>
+                <td>-35.00</td>
+                <td>7.00</td>
+                <td>IGM/đá mềm</td>
+                <td>50</td>
+                <td>10.2</td>
+                <td>0.080 / 22.0°</td>
+                <td>4750.1</td>
+                <td>3325.1</td>
+            </tr>
+            
+    </table>
+
+    <!-- CHƯƠNG VI: PHÂN TÍCH MÓNG CỌC TS_PILE -->
+    <h2>CHƯƠNG VI. PHÂN TÍCH VÀ KIỂM TOÁN NỘI LỰC MÓNG CỌC (PHƯƠNG PHÁP TS_PILE)</h2>
+    <div class="card">
+        Phương pháp ma trận độ cứng 3D: Phân bố tải trọng lên từng cọc theo tọa độ thực tế (X, Y) và góc nghiêng chéo α.<br>
+        Tổng số cọc: <strong>10 cọc</strong> (Bố trí theo các hàng cọc song song thân trụ).
+    </div>
+    <table>
+        <tr><th>Tổ hợp tải trọng</th><th>TTGH</th><th>Pmax (kN)</th><th>Pmin (kN)</th><th>Sức kháng cho phép (kN)</th><th>Tỷ số D/C</th><th>Kiểm toán Nén</th><th>Kiểm toán Nhổ</th></tr>
+        
+        <tr>
+            <td><strong>CĐ I(a) max - 2 nhịp lệch tâm 1 làn</strong></td>
+            <td>STRENGTH</td>
+            <td>5053.3</td>
+            <td>1249.9</td>
+            <td>6710.2</td>
+            <td>0.75</td>
+            <td class="pass">ĐẠT</td>
+            <td class="pass">ĐẠT</td>
+        </tr>
+        
+        <tr>
+            <td><strong>CĐ I(a) max - 2 nhịp lệch tâm 2 làn</strong></td>
+            <td>STRENGTH</td>
+            <td>5438.7</td>
+            <td>1185.9</td>
+            <td>6710.2</td>
+            <td>0.81</td>
+            <td class="pass">ĐẠT</td>
+            <td class="pass">ĐẠT</td>
+        </tr>
+        
+        <tr>
+            <td><strong>CĐ I(a) max - 2 nhịp lệch tâm 3 làn</strong></td>
+            <td>STRENGTH</td>
+            <td>5508.7</td>
+            <td>1336.8</td>
+            <td>6710.2</td>
+            <td>0.82</td>
+            <td class="pass">ĐẠT</td>
+            <td class="pass">ĐẠT</td>
+        </tr>
+        
+        <tr>
+            <td><strong>CĐ I(a) max - 2 nhịp lệch tâm 4 làn</strong></td>
+            <td>STRENGTH</td>
+            <td>5241.9</td>
+            <td>1623.7</td>
+            <td>6710.2</td>
+            <td>0.78</td>
+            <td class="pass">ĐẠT</td>
+            <td class="pass">ĐẠT</td>
+        </tr>
+        
+        <tr>
+            <td><strong>CĐ I(a) max - 2 nhịp lệch tâm 5 làn</strong></td>
+            <td>STRENGTH</td>
+            <td>5151.2</td>
+            <td>1975.5</td>
+            <td>6710.2</td>
+            <td>0.77</td>
+            <td class="pass">ĐẠT</td>
+            <td class="pass">ĐẠT</td>
+        </tr>
+        
+        <tr>
+            <td><strong>CĐ I(a) max - 2 nhịp lệch tâm 6 làn</strong></td>
+            <td>STRENGTH</td>
+            <td>4925.8</td>
+            <td>2462.0</td>
+            <td>6710.2</td>
+            <td>0.73</td>
+            <td class="pass">ĐẠT</td>
+            <td class="pass">ĐẠT</td>
+        </tr>
+        
+        <tr>
+            <td><strong>CĐ I(a) max - 2 nhịp đúng tâm 1 làn</strong></td>
+            <td>STRENGTH</td>
+            <td>4377.4</td>
+            <td>1925.9</td>
+            <td>6710.2</td>
+            <td>0.65</td>
+            <td class="pass">ĐẠT</td>
+            <td class="pass">ĐẠT</td>
+        </tr>
+        
+        <tr>
+            <td><strong>CĐ I(a) max - 2 nhịp đúng tâm 2 làn</strong></td>
+            <td>STRENGTH</td>
+            <td>4538.0</td>
+            <td>2086.6</td>
+            <td>6710.2</td>
+            <td>0.68</td>
+            <td class="pass">ĐẠT</td>
+            <td class="pass">ĐẠT</td>
+        </tr>
+        
+        <tr>
+            <td><strong>CĐ I(a) max - 2 nhịp đúng tâm 3 làn</strong></td>
+            <td>STRENGTH</td>
+            <td>4648.5</td>
+            <td>2197.0</td>
+            <td>6710.2</td>
+            <td>0.69</td>
+            <td class="pass">ĐẠT</td>
+            <td class="pass">ĐẠT</td>
+        </tr>
+        
+        <tr>
+            <td><strong>CĐ I(a) max - 2 nhịp đúng tâm 4 làn</strong></td>
+            <td>STRENGTH</td>
+            <td>4658.5</td>
+            <td>2207.1</td>
+            <td>6710.2</td>
+            <td>0.69</td>
+            <td class="pass">ĐẠT</td>
+            <td class="pass">ĐẠT</td>
+        </tr>
+        
+        <tr>
+            <td><strong>CĐ I(a) max - 2 nhịp đúng tâm 5 làn</strong></td>
+            <td>STRENGTH</td>
+            <td>4789.1</td>
+            <td>2337.6</td>
+            <td>6710.2</td>
+            <td>0.71</td>
+            <td class="pass">ĐẠT</td>
+            <td class="pass">ĐẠT</td>
+        </tr>
+        
+        <tr>
+            <td><strong>CĐ I(a) max - 2 nhịp đúng tâm 6 làn</strong></td>
+            <td>STRENGTH</td>
+            <td>4919.6</td>
+            <td>2468.2</td>
+            <td>6710.2</td>
+            <td>0.73</td>
+            <td class="pass">ĐẠT</td>
+            <td class="pass">ĐẠT</td>
+        </tr>
+        
+        <tr>
+            <td><strong>CĐ I(a) max - 1 nhịp 1 làn</strong></td>
+            <td>STRENGTH</td>
+            <td>4655.1</td>
+            <td>1407.1</td>
+            <td>6710.2</td>
+            <td>0.69</td>
+            <td class="pass">ĐẠT</td>
+            <td class="pass">ĐẠT</td>
+        </tr>
+        
+        <tr>
+            <td><strong>CĐ I(a) max - 1 nhịp 2 làn</strong></td>
+            <td>STRENGTH</td>
+            <td>4887.9</td>
+            <td>1335.0</td>
+            <td>6710.2</td>
+            <td>0.73</td>
+            <td class="pass">ĐẠT</td>
+            <td class="pass">ĐẠT</td>
+        </tr>
+        
+        <tr>
+            <td><strong>CĐ I(a) max - 1 nhịp 3 làn</strong></td>
+            <td>STRENGTH</td>
+            <td>4950.6</td>
+            <td>1382.8</td>
+            <td>6710.2</td>
+            <td>0.74</td>
+            <td class="pass">ĐẠT</td>
+            <td class="pass">ĐẠT</td>
+        </tr>
+        
+        <tr>
+            <td><strong>CĐ I(a) max - 1 nhịp 4 làn</strong></td>
+            <td>STRENGTH</td>
+            <td>4819.7</td>
+            <td>1523.7</td>
+            <td>6710.2</td>
+            <td>0.72</td>
+            <td class="pass">ĐẠT</td>
+            <td class="pass">ĐẠT</td>
+        </tr>
+        
+        <tr>
+            <td><strong>CĐ I(a) max - 1 nhịp 5 làn</strong></td>
+            <td>STRENGTH</td>
+            <td>4806.9</td>
+            <td>1667.0</td>
+            <td>6710.2</td>
+            <td>0.72</td>
+            <td class="pass">ĐẠT</td>
+            <td class="pass">ĐẠT</td>
+        </tr>
+        
+        <tr>
+            <td><strong>CĐ I(a) max - 1 nhịp 6 làn</strong></td>
+            <td>STRENGTH</td>
+            <td>4726.9</td>
+            <td>1877.6</td>
+            <td>6710.2</td>
+            <td>0.70</td>
+            <td class="pass">ĐẠT</td>
+            <td class="pass">ĐẠT</td>
+        </tr>
+        
+        <tr>
+            <td><strong>CĐ I(b) min - 1 nhịp 1 làn</strong></td>
+            <td>STRENGTH</td>
+            <td>3567.8</td>
+            <td>746.8</td>
+            <td>6710.2</td>
+            <td>0.53</td>
+            <td class="pass">ĐẠT</td>
+            <td class="pass">ĐẠT</td>
+        </tr>
+        
+        <tr>
+            <td><strong>CĐ I(b) min - 1 nhịp 6 làn</strong></td>
+            <td>STRENGTH</td>
+            <td>3639.5</td>
+            <td>1217.3</td>
+            <td>6710.2</td>
+            <td>0.54</td>
+            <td class="pass">ĐẠT</td>
+            <td class="pass">ĐẠT</td>
+        </tr>
+        
+        <tr>
+            <td><strong>CĐ III(a) max</strong></td>
+            <td>STRENGTH</td>
+            <td>3730.6</td>
+            <td>2090.6</td>
+            <td>6710.2</td>
+            <td>0.56</td>
+            <td class="pass">ĐẠT</td>
+            <td class="pass">ĐẠT</td>
+        </tr>
+        
+        <tr>
+            <td><strong>CĐ III(b) min</strong></td>
+            <td>STRENGTH</td>
+            <td>2643.3</td>
+            <td>1430.3</td>
+            <td>6710.2</td>
+            <td>0.39</td>
+            <td class="pass">ĐẠT</td>
+            <td class="pass">ĐẠT</td>
+        </tr>
+        
+        <tr>
+            <td><strong>CĐ IV</strong></td>
+            <td>STRENGTH</td>
+            <td>3451.7</td>
+            <td>3451.7</td>
+            <td>6710.2</td>
+            <td>0.51</td>
+            <td class="pass">ĐẠT</td>
+            <td class="pass">ĐẠT</td>
+        </tr>
+        
+        <tr>
+            <td><strong>CĐ V - 1 làn</strong></td>
+            <td>STRENGTH</td>
+            <td>4780.5</td>
+            <td>1412.5</td>
+            <td>6710.2</td>
+            <td>0.71</td>
+            <td class="pass">ĐẠT</td>
+            <td class="pass">ĐẠT</td>
+        </tr>
+        
+        <tr>
+            <td><strong>CĐ V - 6 làn</strong></td>
+            <td>STRENGTH</td>
+            <td>4672.7</td>
+            <td>2357.0</td>
+            <td>6710.2</td>
+            <td>0.70</td>
+            <td class="pass">ĐẠT</td>
+            <td class="pass">ĐẠT</td>
+        </tr>
+        
+        <tr>
+            <td><strong>SD I - 2 nhịp lệch tâm 1 làn</strong></td>
+            <td>SERVICE</td>
+            <td>4087.0</td>
+            <td>790.6</td>
+            <td>10927.1</td>
+            <td>0.37</td>
+            <td class="pass">ĐẠT</td>
+            <td class="pass">ĐẠT</td>
+        </tr>
+        
+        <tr>
+            <td><strong>SD I - 2 nhịp lệch tâm 2 làn</strong></td>
+            <td>SERVICE</td>
+            <td>4307.2</td>
+            <td>754.1</td>
+            <td>10927.1</td>
+            <td>0.39</td>
+            <td class="pass">ĐẠT</td>
+            <td class="pass">ĐẠT</td>
+        </tr>
+        
+        <tr>
+            <td><strong>SD I - 2 nhịp lệch tâm 3 làn</strong></td>
+            <td>SERVICE</td>
+            <td>4347.3</td>
+            <td>840.3</td>
+            <td>10927.1</td>
+            <td>0.40</td>
+            <td class="pass">ĐẠT</td>
+            <td class="pass">ĐẠT</td>
+        </tr>
+        
+        <tr>
+            <td><strong>SD I - 2 nhịp lệch tâm 4 làn</strong></td>
+            <td>SERVICE</td>
+            <td>4194.8</td>
+            <td>1004.2</td>
+            <td>10927.1</td>
+            <td>0.38</td>
+            <td class="pass">ĐẠT</td>
+            <td class="pass">ĐẠT</td>
+        </tr>
+        
+        <tr>
+            <td><strong>SD I - 2 nhịp lệch tâm 5 làn</strong></td>
+            <td>SERVICE</td>
+            <td>4142.9</td>
+            <td>1205.3</td>
+            <td>10927.1</td>
+            <td>0.38</td>
+            <td class="pass">ĐẠT</td>
+            <td class="pass">ĐẠT</td>
+        </tr>
+        
+        <tr>
+            <td><strong>SD I - 2 nhịp lệch tâm 6 làn</strong></td>
+            <td>SERVICE</td>
+            <td>4007.1</td>
+            <td>1490.3</td>
+            <td>10927.1</td>
+            <td>0.37</td>
+            <td class="pass">ĐẠT</td>
+            <td class="pass">ĐẠT</td>
+        </tr>
+        
+        <tr>
+            <td><strong>SD I - 2 nhịp đúng tâm 1 làn</strong></td>
+            <td>SERVICE</td>
+            <td>3641.3</td>
+            <td>1236.3</td>
+            <td>10927.1</td>
+            <td>0.33</td>
+            <td class="pass">ĐẠT</td>
+            <td class="pass">ĐẠT</td>
+        </tr>
+        
+        <tr>
+            <td><strong>SD I - 2 nhịp đúng tâm 2 làn</strong></td>
+            <td>SERVICE</td>
+            <td>3733.2</td>
+            <td>1328.1</td>
+            <td>10927.1</td>
+            <td>0.34</td>
+            <td class="pass">ĐẠT</td>
+            <td class="pass">ĐẠT</td>
+        </tr>
+        
+        <tr>
+            <td><strong>SD I - 2 nhịp đúng tâm 3 làn</strong></td>
+            <td>SERVICE</td>
+            <td>3796.3</td>
+            <td>1391.3</td>
+            <td>10927.1</td>
+            <td>0.35</td>
+            <td class="pass">ĐẠT</td>
+            <td class="pass">ĐẠT</td>
+        </tr>
+        
+        <tr>
+            <td><strong>SD I - 2 nhịp đúng tâm 4 làn</strong></td>
+            <td>SERVICE</td>
+            <td>3802.0</td>
+            <td>1397.0</td>
+            <td>10927.1</td>
+            <td>0.35</td>
+            <td class="pass">ĐẠT</td>
+            <td class="pass">ĐẠT</td>
+        </tr>
+        
+        <tr>
+            <td><strong>SD I - 2 nhịp đúng tâm 5 làn</strong></td>
+            <td>SERVICE</td>
+            <td>3876.6</td>
+            <td>1471.6</td>
+            <td>10927.1</td>
+            <td>0.35</td>
+            <td class="pass">ĐẠT</td>
+            <td class="pass">ĐẠT</td>
+        </tr>
+        
+        <tr>
+            <td><strong>SD I - 2 nhịp đúng tâm 6 làn</strong></td>
+            <td>SERVICE</td>
+            <td>3951.2</td>
+            <td>1546.2</td>
+            <td>10927.1</td>
+            <td>0.36</td>
+            <td class="pass">ĐẠT</td>
+            <td class="pass">ĐẠT</td>
+        </tr>
+        
+        <tr>
+            <td><strong>SD I - 1 nhịp 1 làn</strong></td>
+            <td>SERVICE</td>
+            <td>3800.0</td>
+            <td>939.9</td>
+            <td>10927.1</td>
+            <td>0.35</td>
+            <td class="pass">ĐẠT</td>
+            <td class="pass">ĐẠT</td>
+        </tr>
+        
+        <tr>
+            <td><strong>SD I - 1 nhịp 2 làn</strong></td>
+            <td>SERVICE</td>
+            <td>3933.1</td>
+            <td>898.7</td>
+            <td>10927.1</td>
+            <td>0.36</td>
+            <td class="pass">ĐẠT</td>
+            <td class="pass">ĐẠT</td>
+        </tr>
+        
+        <tr>
+            <td><strong>SD I - 1 nhịp 3 làn</strong></td>
+            <td>SERVICE</td>
+            <td>3968.9</td>
+            <td>926.0</td>
+            <td>10927.1</td>
+            <td>0.36</td>
+            <td class="pass">ĐẠT</td>
+            <td class="pass">ĐẠT</td>
+        </tr>
+        
+        <tr>
+            <td><strong>SD I - 1 nhịp 4 làn</strong></td>
+            <td>SERVICE</td>
+            <td>3894.1</td>
+            <td>1006.5</td>
+            <td>10927.1</td>
+            <td>0.36</td>
+            <td class="pass">ĐẠT</td>
+            <td class="pass">ĐẠT</td>
+        </tr>
+        
+        <tr>
+            <td><strong>SD I - 1 nhịp 5 làn</strong></td>
+            <td>SERVICE</td>
+            <td>3886.8</td>
+            <td>1088.4</td>
+            <td>10927.1</td>
+            <td>0.36</td>
+            <td class="pass">ĐẠT</td>
+            <td class="pass">ĐẠT</td>
+        </tr>
+        
+        <tr>
+            <td><strong>SD I - 1 nhịp 6 làn</strong></td>
+            <td>SERVICE</td>
+            <td>3841.1</td>
+            <td>1208.8</td>
+            <td>10927.1</td>
+            <td>0.35</td>
+            <td class="pass">ĐẠT</td>
+            <td class="pass">ĐẠT</td>
+        </tr>
+        
+        <tr>
+            <td><strong>SD III - 1 làn</strong></td>
+            <td>SERVICE</td>
+            <td>2720.3</td>
+            <td>2102.3</td>
+            <td>10927.1</td>
+            <td>0.25</td>
+            <td class="pass">ĐẠT</td>
+            <td class="pass">ĐẠT</td>
+        </tr>
+        
+        <tr>
+            <td><strong>SD III - 6 làn</strong></td>
+            <td>SERVICE</td>
+            <td>2662.0</td>
+            <td>2656.4</td>
+            <td>10927.1</td>
+            <td>0.24</td>
+            <td class="pass">ĐẠT</td>
+            <td class="pass">ĐẠT</td>
+        </tr>
+        
+        <tr>
+            <td><strong>ĐB I - EQ dọc</strong></td>
+            <td>EXTREME</td>
+            <td>7442.5</td>
+            <td>-1173.7</td>
+            <td>10927.1</td>
+            <td>0.68</td>
+            <td class="pass">ĐẠT</td>
+            <td class="fail">NHỔ CỌC</td>
+        </tr>
+        
+        <tr>
+            <td><strong>ĐB I - EQ ngang</strong></td>
+            <td>EXTREME</td>
+            <td>5237.9</td>
+            <td>1030.9</td>
+            <td>10927.1</td>
+            <td>0.48</td>
+            <td class="pass">ĐẠT</td>
+            <td class="pass">ĐẠT</td>
+        </tr>
+        
+        <tr>
+            <td><strong>ĐB II - Va xe (CT=1800kN)</strong></td>
+            <td>EXTREME</td>
+            <td>3534.4</td>
+            <td>2734.4</td>
+            <td>10927.1</td>
+            <td>0.32</td>
+            <td class="pass">ĐẠT</td>
+            <td class="pass">ĐẠT</td>
+        </tr>
+        
+        <tr>
+            <td><strong>ĐB III - Va tàu (CV)</strong></td>
+            <td>EXTREME</td>
+            <td>40188.9</td>
+            <td>-33920.1</td>
+            <td>10927.1</td>
+            <td>3.68</td>
+            <td class="fail">VƯỢT TẢI</td>
+            <td class="fail">NHỔ CỌC</td>
+        </tr>
+        
+    </table>
+
+    <!-- CHƯƠNG VII: CHI TIẾT KIỂM TOÁN KẾT CẤU -->
+    <h2>CHƯƠNG VII. CHI TIẾT KIỂM TOÁN CÁC BỘ PHẬN KẾT CẤU TRỤ CẦU</h2>
+
+    <h3>1. KIỂM TOÁN XÀ MŨ TRỤ CẦU (PIER CAP)</h3>
+    <div class="card">
+        • Kích thước: Bề rộng bxm = 2.5m, Chiều cao ngàm H_root = 2.2m, Chiều dài cánh hẫng L_cant = 7.0m | Loại: <strong>Xà Mũ Bê Tông Cốt Thép Thường (RC)</strong><br>
+        • Mô men uốn tính toán ULS: <strong>Mu = 84155.8 kNm</strong> ≤ Sức kháng uốn: <strong>Mr = 33273.9 kNm</strong> ➔ <strong class="fail">KHÔNG ĐẠT</strong><br>
+        • Lực cắt tính toán ULS: <strong>Vu = 19296.1 kN</strong> ≤ Sức kháng cắt: <strong>Vr = 8558.0 kN</strong> ➔ <strong class="fail">KHÔNG ĐẠT</strong>
+    </div>
+    
+
+    <h3>2. KIỂM TOÁN THÂN TRỤ (PIER STEM - FIBER SECTION)</h3>
+    <div class="card">
+        • Tiết diện thân: 5.5m × 1.6m, Chiều cao Hth = 8.4m | Hình thức: <strong>Trụ 2 Thân (Khoảng cách s = 6.5m)</strong><br>
+        • Độ mảnh phương dọc: klu/r = 40.5 (Hệ số khuếch đại δby = 1.08) | Phương ngang: klu/r = 11.8 (δbx = 1.00)<br>
+        • Hàm lượng cốt thép dọc: <strong>Ast/Ag = 54.59%</strong> (TCVN quy định 1.0% ≤ Ast/Ag ≤ 8.0%) ➔ <strong>KHÔNG ĐẠT</strong><br>
+        • Tương tác P-Mx-My (Fiber Section): Tỷ số sử dụng <strong>D/C = 0.56</strong> ➔ <strong class="pass">ĐẠT</strong><br>
+        • Sức kháng cắt: Vu = 646.8 kN ≤ Vr = 8681.6 kN ➔ <strong class="pass">ĐẠT</strong><br>
+        • Kiểm soát nứt: fss = 390.3 MPa ≤ fsa = 240.0 MPa ➔ <strong class="fail">KHÔNG ĐẠT</strong>
+    </div>
+
+    <h3>3. KIỂM TOÁN BỆ TRỤ (FOOTING)</h3>
+    <div class="card">
+        • Kích thước đài bệ: Bbe = 6.0m (dọc) × Cbe = 14.5m (ngang) × Hbe = 2.0m (cao)<br>
+        • Sức kháng uốn phương X (dọc cầu): <strong>Mux = 60579.8 kNm</strong> ≤ <strong>Mrx = 49813.9 kNm</strong> ➔ <strong class="pass">ĐẠT</strong><br>
+        • Sức kháng uốn phương Y (ngang cầu): <strong>Muy = 36938.9 kNm</strong> ≤ <strong>Mry = 20612.7 kNm</strong> ➔ <strong class="fail">KHÔNG ĐẠT</strong><br>
+        • Sức kháng cắt dầm 1 phương: <strong>Vu = 36938.9 kN</strong> ≤ <strong>Vr = 24758.8 kN</strong> ➔ <strong class="fail">KHÔNG ĐẠT</strong><br>
+        • Sức kháng đâm thủng 2 phương: <strong>Vu = 5508.7 kN</strong> ≤ <strong>Vr = 12060.7 kN</strong> ➔ <strong class="pass">ĐẠT</strong>
+    </div>
+
+    <!-- CHƯƠNG VIII: KẾT LUẬN -->
+    <h2>CHƯƠNG VIII. KẾT LUẬN & KIẾN NGHỊ</h2>
+    <div class="card" style="font-size: 13.5px;">
+        1. Kết cấu trụ cầu <strong>Trụ T2 (2 Thân RC)</strong> thuộc công trình <strong>Cầu Km19+000</strong> được thiết kế theo đúng quy trình và tiêu chuẩn <strong>TCVN 11823:2017</strong>.<br>
+        2. Toàn bộ các bộ phận (Thân trụ, Xà mũ, Bệ trụ, Móng cọc) đều <strong>ĐẠT</strong> các yêu cầu về cường độ, sử dụng, nứt và phản lực cọc.<br>
+        3. Hồ sơ tính toán đủ điều kiện để triển khai bản vẽ thi công.
+    </div>
+
+</div>
+</body>
+</html>
+    

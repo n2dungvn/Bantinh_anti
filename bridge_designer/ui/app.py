@@ -75,6 +75,32 @@ async def calculate_abutment(data: Dict[str, Any]):
         # Trả về kết quả JSON rút gọn cho UI
         v = result.verification
         p = result.piles
+        
+        cap_info = None
+        if p.capacity_result:
+            cr = p.capacity_result
+            cap_info = {
+                "qshaft_nominal": cr.qshaft_nominal_kn,
+                "qtip_nominal": cr.qtip_nominal_kn,
+                "Rn_nominal": cr.qshaft_nominal_kn + cr.qtip_nominal_kn,
+                "phi_Rn": p.P_allow_strength,
+                "Pcp": p.P_allow_service,
+                "Pext": p.P_allow_extreme,
+                "uplift": p.P_allow_uplift,
+                "material_Pr": cr.strength.material_pr_kn,
+                "layers": [
+                    {
+                        "name": l.name,
+                        "thickness": l.thickness_m,
+                        "soil_type": l.soil_type,
+                        "soil_label": l.soil_label,
+                        "spt": l.n_spt,
+                        "qs_nominal": l.qs_nominal_kn,
+                        "qs_factored": l.qs_factored_kn
+                    } for l in cr.layers if l.skin_length_m > 0
+                ]
+            }
+
         return {
             "success": result.is_success,
             "abutment_name": model.abutment_name,
@@ -96,11 +122,13 @@ async def calculate_abutment(data: Dict[str, Any]):
                 "footing_shear": {"pass": v.footing.shear_front.passed and v.footing.shear_rear.passed, "Vu": v.footing.Vu_front, "Vr": v.footing.shear_front.Vr, "ratio": v.footing.shear_front.demand_capacity_ratio},
                 "footing_crack": {"pass": v.footing.crack_front.passed and v.footing.crack_rear.passed, "fss": v.footing.crack_front.fss, "fsa": v.footing.crack_front.fsa},
                 "footing_punching": {"pass": v.footing.punching_passed, "Vu": v.footing.Vu_punching, "Vr": v.footing.Vr_punching},
-                "pile_capacity_service": {"pass": p.P_max_service <= model.pile_capacity_allowable, "Pmax": p.P_max_service, "Pcp": model.pile_capacity_allowable, "ratio": p.P_max_service / model.pile_capacity_allowable if model.pile_capacity_allowable else 0},
-                "pile_capacity_strength": {"pass": p.P_max_strength <= 1.40 * model.pile_capacity_allowable, "Pmax": p.P_max_strength, "Pgh": 1.40 * model.pile_capacity_allowable, "ratio": p.P_max_strength / (1.40 * model.pile_capacity_allowable) if model.pile_capacity_allowable else 0},
-                "pile_capacity": {"pass": p.passed_capacity, "Pmax_ser": p.P_max_service, "Pcp": model.pile_capacity_allowable, "Pmax_str": p.P_max_strength, "Pgh": 1.40 * model.pile_capacity_allowable},
+                "pile_capacity_service": {"pass": p.P_max_service <= p.P_allow_service, "Pmax": p.P_max_service, "Pcp": p.P_allow_service, "ratio": p.P_max_service / p.P_allow_service if p.P_allow_service else 0},
+                "pile_capacity_strength": {"pass": p.P_max_strength <= p.P_allow_strength, "Pmax": p.P_max_strength, "Pgh": p.P_allow_strength, "ratio": p.P_max_strength / p.P_allow_strength if p.P_allow_strength else 0},
+                "pile_capacity_extreme": {"pass": p.P_max_extreme <= p.P_allow_extreme, "Pmax": p.P_max_extreme, "Pgh": p.P_allow_extreme, "ratio": p.P_max_extreme / p.P_allow_extreme if p.P_allow_extreme else 0},
+                "pile_capacity": {"pass": p.passed_capacity, "Pmax_str": p.P_max_strength, "Pgh": p.P_allow_strength, "Pmax_ext": p.P_max_extreme, "Pgh_ext": p.P_allow_extreme},
                 "pile_tension": {"pass": p.passed_tension, "Pmin": p.P_min_service}
             },
+            "capacity_result": cap_info,
             "piles": [{"id": p.id, "x": p.x, "y": p.y} for p in p.piles],
             "reports": {
                 "docx": f"/api/download/{urllib.parse.quote(os.path.basename(docx_path))}",
@@ -168,6 +196,31 @@ async def calculate_pier(data: Dict[str, Any]):
             } for st in cap.pt_result.stages
         ] if cap.pt_result and cap.pt_result.stages else []
 
+        cap_info = None
+        if p.capacity_result:
+            cr = p.capacity_result
+            cap_info = {
+                "qshaft_nominal": cr.qshaft_nominal_kn,
+                "qtip_nominal": cr.qtip_nominal_kn,
+                "Rn_nominal": cr.qshaft_nominal_kn + cr.qtip_nominal_kn,
+                "phi_Rn": p.P_allow_strength,
+                "Pcp": p.P_allow_service,
+                "Pext": p.P_allow_extreme,
+                "uplift": p.P_allow_uplift,
+                "material_Pr": cr.strength.material_pr_kn,
+                "layers": [
+                    {
+                        "name": l.name,
+                        "thickness": l.thickness_m,
+                        "soil_type": l.soil_type,
+                        "soil_label": l.soil_label,
+                        "spt": l.n_spt,
+                        "qs_nominal": l.qs_nominal_kn,
+                        "qs_factored": l.qs_factored_kn
+                    } for l in cr.layers if l.skin_length_m > 0
+                ]
+            }
+
         return {
             "success": result.is_success,
             "pier_name": model.pier_name,
@@ -187,8 +240,30 @@ async def calculate_pier(data: Dict[str, Any]):
                 "footing_shear": {"pass": v.footing.shear_beam.passed, "Vu": v.footing.Vu_max, "Vr": v.footing.shear_beam.Vr, "ratio": v.footing.shear_beam.demand_capacity_ratio},
                 "footing_crack": {"pass": v.footing.crack_x.passed and v.footing.crack_y.passed, "fss": v.footing.crack_x.fss, "fsa": v.footing.crack_x.fsa},
                 "footing_punching": {"pass": v.footing.punching_passed, "Vu": v.footing.Vu_punching, "Vr": v.footing.Vr_punching},
-                "pile_capacity": {"pass": p.passed_capacity, "Pmax": p.P_max_service, "Pcp": model.pile_capacity_allowable, "ratio": p.P_max_service / model.pile_capacity_allowable if model.pile_capacity_allowable else 0}
+                "pile_capacity_service": {"pass": p.P_max_service <= p.P_allow_service, "Pmax": p.P_max_service, "Pcp": p.P_allow_service, "ratio": p.P_max_service / p.P_allow_service if p.P_allow_service else 0},
+                "pile_capacity_strength": {"pass": p.P_max_strength <= p.P_allow_strength, "Pmax": p.P_max_strength, "Pgh": p.P_allow_strength, "ratio": p.P_max_strength / p.P_allow_strength if p.P_allow_strength else 0},
+                "pile_capacity_extreme": {"pass": p.P_max_extreme <= p.P_allow_extreme, "Pmax": p.P_max_extreme, "Pgh": p.P_allow_extreme, "ratio": p.P_max_extreme / p.P_allow_extreme if p.P_allow_extreme else 0},
+                "pile_capacity": {"pass": p.passed_capacity, "Pmax_str": p.P_max_strength, "Pgh": p.P_allow_strength, "Pmax_ext": p.P_max_extreme, "Pgh_ext": p.P_allow_extreme},
+                "pile_tension": {"pass": p.passed_tension, "Pmin": p.P_min_service}
             },
+            "capacity_result": cap_info,
+            "bearing_forces": {
+                "H_TU_pos": result.loads.bearing_forces.get("H_TU_pos", 0.0) if isinstance(result.loads.bearing_forces, dict) else getattr(result.loads.bearing_forces, "H_TU_pos", 0.0),
+                "H_TU_neg": result.loads.bearing_forces.get("H_TU_neg", 0.0) if isinstance(result.loads.bearing_forces, dict) else getattr(result.loads.bearing_forces, "H_TU_neg", 0.0),
+                "H_CR": result.loads.bearing_forces.get("H_CR", 0.0) if isinstance(result.loads.bearing_forces, dict) else getattr(result.loads.bearing_forces, "H_CR", 0.0),
+                "H_SH": result.loads.bearing_forces.get("H_SH", 0.0) if isinstance(result.loads.bearing_forces, dict) else getattr(result.loads.bearing_forces, "H_SH", 0.0),
+                "H_FR": result.loads.bearing_forces.get("H_FR", 0.0) if isinstance(result.loads.bearing_forces, dict) else getattr(result.loads.bearing_forces, "H_FR", 0.0),
+                "F_bearing_left_TU": result.loads.bearing_forces.get("F_bearing_left_TU", 0.0) if isinstance(result.loads.bearing_forces, dict) else getattr(result.loads.bearing_forces, "F_bearing_left_TU", 0.0),
+                "F_bearing_right_TU": result.loads.bearing_forces.get("F_bearing_right_TU", 0.0) if isinstance(result.loads.bearing_forces, dict) else getattr(result.loads.bearing_forces, "F_bearing_right_TU", 0.0),
+            },
+            "loads_stem": [
+                {"name": lv.name, "Hx": round(lv.Hx, 1), "Hy": round(lv.Hy, 1), "N": round(lv.N, 1), "Mx": round(lv.Mx, 1), "My": round(lv.My, 1)}
+                for lv in result.loads.loads_stem_base.values()
+            ],
+            "loads_footing": [
+                {"name": lv.name, "Hx": round(lv.Hx, 1), "Hy": round(lv.Hy, 1), "N": round(lv.N, 1), "Mx": round(lv.Mx, 1), "My": round(lv.My, 1)}
+                for lv in result.loads.loads_footing_base.values()
+            ],
             "pt_stages": pt_stages,
             "pm_curve": pm_pts,
             "demand_point": {"Pu": stem.Pu_max, "Muy": stem.Muy_max_magnified},
